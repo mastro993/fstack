@@ -74,7 +74,7 @@ def fetch(pr_arg):
     checks = fetch_checks(pr["number"], f"{host}/{owner}/{repo}")
     host_args = [] if host == "github.com" else ["--hostname", host]
     data = json.loads(gh("api", "graphql", *host_args, "-f", f"query={ACTIVITY_QUERY}",
-                         "-F", f"owner={owner}", "-F", f"repo={repo}", "-F", f"number={pr['number']}"))
+                         "-f", f"owner={owner}", "-f", f"repo={repo}", "-F", f"number={pr['number']}"))
     pr["viewer"] = data["data"]["viewer"]["login"]
     pr["activity"] = data["data"]["repository"]["pullRequest"]
     pr["checks"] = checks
