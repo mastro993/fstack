@@ -37,6 +37,12 @@ def load():
 
 
 STATE = load()
+STATE.setdefault("t0", time.time())
+
+
+def visible(item):
+    """Scenario items with after_seconds appear that long after the stub's first call."""
+    return time.time() - STATE["t0"] >= item.get("after_seconds", 0)
 
 
 def save():
@@ -108,7 +114,7 @@ def nid(prefix):
 
 def threads():
     out = []
-    for t in SCN.get("threads", []):
+    for t in filter(visible, SCN.get("threads", [])):
         comments = [{"id": c["id"], "databaseId": int(hashlib.sha1(c["id"].encode()).hexdigest()[:7], 16), "author": {"login": c["author"]},
                      "body": c["body"], "url": f"{URL}#discussion_{c['id']}", "createdAt": "2026-11-02T10:00:00Z"}
                     for c in t["comments"]]
@@ -120,12 +126,12 @@ def threads():
 
 def reviews():
     return [{"id": r["id"], "author": {"login": r["author"]}, "state": r["state"], "body": r.get("body", ""),
-             "submittedAt": "2026-11-02T10:00:00Z"} for r in SCN.get("reviews", [])] + STATE["extra_reviews"]
+             "submittedAt": "2026-11-02T10:00:00Z"} for r in SCN.get("reviews", []) if visible(r)] + STATE["extra_reviews"]
 
 
 def issue_comments():
     return [{"id": c["id"], "author": {"login": c["author"]}, "body": c["body"], "url": f"{URL}#issuecomment-{c['id']}",
-             "createdAt": "2026-11-02T10:00:00Z"} for c in SCN.get("comments", [])] + STATE["comments"]
+             "createdAt": "2026-11-02T10:00:00Z"} for c in SCN.get("comments", []) if visible(c)] + STATE["comments"]
 
 
 def review_decision():
@@ -139,10 +145,13 @@ def review_decision():
 
 
 def maybe_approve():
-    """A re-requested reviewer listed in approve_on_rerequest approves once the head has moved."""
+    """A re-requested reviewer listed in approve_on_rerequest approves once the head has moved,
+    approve_delay_seconds after the re-request."""
     for login in SCN.get("approve_on_rerequest", []):
         already = any(r["author"]["login"] == login and r["state"] == "APPROVED" for r in STATE["extra_reviews"])
-        if login in STATE["rerequested"] and head() != SCN["initial_head"] and not already:
+        waited = time.time() - STATE.get("rerequested_at", {}).get(login, time.time())
+        if login in STATE["rerequested"] and head() != SCN["initial_head"] and not already \
+                and waited >= SCN.get("approve_delay_seconds", 0):
             STATE["extra_reviews"].append({"id": nid("PRR"), "author": {"login": login}, "state": "APPROVED",
                                            "body": "Thanks, looks good now.", "submittedAt": "2026-11-03T12:00:00Z"})
 
@@ -154,9 +163,13 @@ def pr_json():
     rollup = [{"__typename": "CheckRun", "name": c["name"], "status": "COMPLETED" if c["bucket"] != "pending" else "IN_PROGRESS",
                "conclusion": c["state"] if c["bucket"] != "pending" else "", "detailsUrl": c["link"], "workflowName": "CI"}
               for c in checks()]
-    requested = [{"login": r} for r in STATE["rerequested"] if review_decision() != "APPROVED"]
+    reviewed = {r["author"]["login"] for r in reviews()}
+    waiting_on = [r for r in SCN.get("requested_reviewers", []) if r not in reviewed]
+    waiting_on += [r for r in STATE["rerequested"] if review_decision() != "APPROVED" and r not in waiting_on]
+    requested = [{"login": r} for r in waiting_on]
     state = "MERGED" if STATE["merged"] else "OPEN"
     return {
+        "id": f"PR_{N}_{int(STATE['t0'] * 1000)}",  # unique per sandbox, like a real node ID per PR
         "number": N, "url": URL, "title": SCN["title"], "body": SCN.get("body", ""), "state": state,
         "isDraft": False, "headRefName": SCN["head"], "headRefOid": sha, "baseRefName": SCN["base"],
         "baseRefOid": git("--git-dir", str(REMOTE), "rev-parse", f"refs/heads/{SCN['base']}"),
@@ -297,6 +310,7 @@ def rest(args):
             reviewers = v.get("reviewers[]") or v.get("reviewers") or ""
             for r in ([reviewers] if isinstance(reviewers, str) else reviewers):
                 STATE["rerequested"].append(r.strip("[]\" "))
+                STATE.setdefault("rerequested_at", {})[r.strip("[]\" ")] = time.time()
         return emit({"users": [{"login": r} for r in STATE["rerequested"]]}, args)
     if path in (f"{base}/pulls/{N}", f"{base}/pulls/{N}/"):
         p = pr_json()
@@ -358,6 +372,7 @@ def pr_cmd(args):
         for r in (flag(args, "--add-reviewer") or "").split(","):
             if r:
                 STATE["rerequested"].append(r)
+                STATE.setdefault("rerequested_at", {})[r] = time.time()
         print(URL)
         return 0
     if sub == "merge":

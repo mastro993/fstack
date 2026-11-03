@@ -4,8 +4,9 @@
   pr_watch.py snapshot [PR]   Print the PR's current state and mark everything shown as seen.
   pr_watch.py wait [PR]       Poll until something new needs attention, print it, and exit.
 
-PR is a number, URL, or branch; it defaults to the current branch's PR. Seen state lives in the
-repository's git dir (or ~/.cache when run outside one), so each checkout tracks its own PRs.
+PR is a number, URL, or branch; it defaults to the current branch's PR. Seen state lives in
+$XDG_CACHE_HOME/pr-babysit (default ~/.cache), keyed by the PR's GitHub node ID, so it is the same
+from any directory or worktree.
 Items authored by the gh-authenticated user count as seen: they are the babysitter's own replies.
 """
 
@@ -19,7 +20,7 @@ import time
 from pathlib import Path
 
 PR_FIELDS = (
-    "number,url,title,state,isDraft,headRefName,headRefOid,baseRefName,"
+    "id,number,url,title,state,isDraft,headRefName,headRefOid,baseRefName,"
     "mergeable,mergeStateStatus,reviewDecision,reviewRequests"
 )
 CHECK_FIELDS = "name,bucket,state,link,workflow"
@@ -77,13 +78,12 @@ def fetch(pr_arg):
     pr["viewer"] = data["data"]["viewer"]["login"]
     pr["activity"] = data["data"]["repository"]["pullRequest"]
     pr["checks"] = checks
-    pr["key"] = f"{owner}-{repo}-{pr['number']}"
+    pr["key"] = pr["id"]
     return pr
 
 
 def state_path(key):
-    proc = subprocess.run(["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True)
-    base = Path(proc.stdout.strip()) if proc.returncode == 0 else Path.home() / ".cache"
+    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
     return base / "pr-babysit" / f"{key}.json"
 
 
@@ -245,8 +245,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=["snapshot", "wait"])
     parser.add_argument("pr", nargs="?", help="PR number, URL, or branch (default: current branch)")
-    parser.add_argument("--interval", type=int, default=int(os.environ.get("PR_WATCH_INTERVAL", 30)),
-                        help="seconds between polls (default 30)")
+    parser.add_argument("--interval", type=int, default=int(os.environ.get("PR_WATCH_INTERVAL", 15)),
+                        help="seconds between polls (default 15)")
     parser.add_argument("--timeout", type=int, default=1500, help="seconds before giving up quietly (default 1500)")
     args = parser.parse_args()
     pr_arg = [args.pr] if args.pr else []
