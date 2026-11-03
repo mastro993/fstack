@@ -6,6 +6,11 @@ commit stays pending for scenario["ci_delay_seconds"] after the stub first sees 
 scenario["ci_command"] on that commit: exit 0 is a pass. Review threads, reviews, and comments
 come from the scenario; replies, comments, and review requests are recorded in state.json, and
 every call is appended to calls.log for grading.
+
+Optional scenario keys simulate the world moving on:
+  base_moves_after_seconds        another PR lands: the base branch jumps to refs/stub/base-next
+  require_up_to_date              mergeStateStatus is BEHIND while the head lacks the base tip
+  merge_when_ready_after_seconds  a maintainer merges once the PR has been ready this long
 """
 
 import hashlib
@@ -55,6 +60,49 @@ def git(*args, cwd=None):
 
 def head():
     return branch_sha(SCN["head"])
+
+
+def maybe_move_base():
+    if "base_moves_after_seconds" in SCN and not STATE.get("base_moved") \
+            and visible({"after_seconds": SCN["base_moves_after_seconds"]}):
+        git("--git-dir", str(REMOTE), "update-ref", f"refs/heads/{SCN['base']}", "refs/stub/base-next")
+        STATE["base_moved"] = True
+
+
+def conflicting():
+    proc = subprocess.run(["git", "--git-dir", str(REMOTE), "merge-tree", "--write-tree", "--quiet",
+                           f"refs/heads/{SCN['base']}", f"refs/heads/{SCN['head']}"])
+    return proc.returncode == 1
+
+
+def behind():
+    proc = subprocess.run(["git", "--git-dir", str(REMOTE), "merge-base", "--is-ancestor",
+                           f"refs/heads/{SCN['base']}", f"refs/heads/{SCN['head']}"])
+    return proc.returncode != 0
+
+
+def merge_state():
+    """(mergeable, mergeStateStatus) as GitHub reports them."""
+    if conflicting():
+        return "CONFLICTING", "DIRTY"
+    if SCN.get("require_up_to_date") and behind():
+        return "MERGEABLE", "BEHIND"
+    ready = ci_result(head())[0] == "pass" and review_decision() == "APPROVED"
+    return "MERGEABLE", "CLEAN" if ready else "BLOCKED"
+
+
+def maybe_merge():
+    """A maintainer merges merge_when_ready_after_seconds after the PR became ready to merge."""
+    delay = SCN.get("merge_when_ready_after_seconds")
+    if delay is None or STATE["merged"]:
+        return
+    if merge_state()[1] != "CLEAN":
+        STATE["ready_since"] = None
+    elif not STATE.get("ready_since"):
+        STATE["ready_since"] = time.time()
+    elif time.time() - STATE["ready_since"] >= delay:
+        STATE["merged"] = True
+        STATE["merged_by"] = "maintainer"
 
 
 INFRA_LOG = """Run python3 -m pip install -r requirements-dev.txt
@@ -158,8 +206,8 @@ def maybe_approve():
 
 def pr_json():
     maybe_approve()
+    maybe_merge()
     sha = head()
-    bucket = ci_result(sha)[0]
     rollup = [{"__typename": "CheckRun", "name": c["name"], "status": "COMPLETED" if c["bucket"] != "pending" else "IN_PROGRESS",
                "conclusion": c["state"] if c["bucket"] != "pending" else "", "detailsUrl": c["link"], "workflowName": "CI"}
               for c in checks()]
@@ -173,7 +221,7 @@ def pr_json():
         "number": N, "url": URL, "title": SCN["title"], "body": SCN.get("body", ""), "state": state,
         "isDraft": False, "headRefName": SCN["head"], "headRefOid": sha, "baseRefName": SCN["base"],
         "baseRefOid": git("--git-dir", str(REMOTE), "rev-parse", f"refs/heads/{SCN['base']}"),
-        "mergeable": "MERGEABLE", "mergeStateStatus": "CLEAN" if bucket == "pass" and review_decision() == "APPROVED" else "BLOCKED",
+        "mergeable": merge_state()[0], "mergeStateStatus": merge_state()[1],
         "reviewDecision": review_decision(), "reviewRequests": requested, "statusCheckRollup": rollup,
         "author": {"login": VIEWER}, "isCrossRepository": False, "maintainerCanModify": True,
         "headRepository": {"name": REPO}, "headRepositoryOwner": {"login": OWNER},
@@ -258,6 +306,7 @@ def graphql(args):
         print(f"stub: unsupported mutation", file=sys.stderr)
         return 1
     maybe_approve()
+    maybe_merge()
     pr = {"id": "PR_1", "number": N, "url": URL, "title": SCN["title"], "state": "MERGED" if STATE["merged"] else "OPEN",
           "headRefOid": head(), "reviewDecision": review_decision(),
           "reviewThreads": {"nodes": threads(), "pageInfo": {"hasNextPage": False}},
@@ -315,7 +364,7 @@ def rest(args):
     if path in (f"{base}/pulls/{N}", f"{base}/pulls/{N}/"):
         p = pr_json()
         return emit({"number": N, "state": p["state"].lower(), "head": {"sha": p["headRefOid"], "ref": SCN["head"]},
-                     "base": {"ref": SCN["base"]}, "mergeable": True, "html_url": URL, "title": SCN["title"]}, args)
+                     "base": {"ref": SCN["base"]}, "mergeable": merge_state()[0] == "MERGEABLE", "html_url": URL, "title": SCN["title"]}, args)
     if path.startswith(f"{base}/commits/") and path.endswith(("/check-runs", "/status")):
         return emit({"check_runs": [{"name": c["name"], "status": "completed" if c["bucket"] != "pending" else "in_progress",
                                      "conclusion": {"pass": "success", "fail": "failure"}.get(c["bucket"]),
@@ -375,6 +424,8 @@ def pr_cmd(args):
                 STATE.setdefault("rerequested_at", {})[r] = time.time()
         print(URL)
         return 0
+    if sub == "update-branch":
+        return update_branch("--rebase" in args)
     if sub == "merge":
         STATE["merged"] = True
         print(f"Merged pull request #{N}")
@@ -389,6 +440,21 @@ def pr_cmd(args):
         return 1
     print(f"stub: unsupported pr {sub}", file=sys.stderr)
     return 1
+
+
+def update_branch(rebase):
+    """Merge the base branch into the PR branch on the remote, as GitHub's "Update branch" does."""
+    if conflicting():
+        print("X Cannot update PR branch due to conflicts", file=sys.stderr)
+        return 1
+    with tempfile.TemporaryDirectory() as tmp:
+        subprocess.run(["git", "clone", "-q", "-b", SCN["head"], str(REMOTE), tmp], check=True)
+        git("-c", "user.name=GitHub", "-c", "user.email=noreply@github.com",
+            *(["rebase", f"origin/{SCN['base']}"] if rebase else
+              ["merge", "-q", "--no-edit", f"origin/{SCN['base']}"]), cwd=tmp)
+        git("push", "-q", *(["--force"] if rebase else []), "origin", f"HEAD:{SCN['head']}", cwd=tmp)
+    print(f"✓ PR branch updated")
+    return 0
 
 
 def run_sha(args):
@@ -453,6 +519,7 @@ def main():
         log.write(shlex.join(["gh", *args]) + "\n")
     if not clean:
         return 0
+    maybe_move_base()
     cmd, rest_args = clean[0], clean[1:]
     try:
         if cmd == "pr" and rest_args:

@@ -91,7 +91,7 @@ def load_state(key):
     path = state_path(key)
     if path.exists():
         return json.loads(path.read_text())
-    return {"seen": [], "checks": {}, "passed": [], "conflicts": []}
+    return {"seen": [], "checks": {}, "passed": [], "conflicts": [], "behind": []}
 
 
 def save_state(key, state):
@@ -156,6 +156,9 @@ def new_events(pr, state):
     if pr["mergeable"] == "CONFLICTING" and head not in state["conflicts"]:
         events.append(f"MERGE CONFLICT with {pr['baseRefName']}")
         state["conflicts"].append(head)
+    if pr["mergeStateStatus"] == "BEHIND" and head not in state.setdefault("behind", []):
+        events.append(f"BEHIND {pr['baseRefName']}: the branch must be updated before it can merge")
+        state["behind"].append(head)
     return events, new_threads
 
 
@@ -184,6 +187,8 @@ def summary(pr, new_threads=()):
         blockers.append(f"review {pr['reviewDecision']}")
     if pr["mergeable"] != "MERGEABLE":
         blockers.append(f"mergeable {pr['mergeable']}")
+    elif pr["mergeStateStatus"] == "BEHIND":
+        blockers.append(f"behind {pr['baseRefName']}")
     if waiting:
         blockers.append(f"{len(waiting)} thread(s) awaiting reply")
     if pr["isDraft"]:

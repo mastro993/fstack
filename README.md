@@ -34,7 +34,7 @@
 
 | Skill | What it does |
 | --- | --- |
-| [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Claude fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, and tells you when the PR is ready to merge. |
+| [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Claude fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, tells you when the PR is ready to merge, and keeps watching until it lands. |
 | [**ux-stress-test**](skills/ux-stress-test/SKILL.md) | Five first-time-user personas try to reach first success in your web app in a real browser. Claude ranks the friction they hit, fixes what you choose, and reruns the personas blind to prove the fixes, or opens issues for later. |
 
 ### pr-babysit
@@ -44,7 +44,8 @@ Claude waits on GitHub without burning turns and reacts as things happen:
 - 🔴 **Failing check**: reads the failed log once, fixes the root cause, reruns infra flakes once, and stops after two failed attempts.
 - 💬 **Review comment**: fixes what's clear, answers questions from the code, checks bot claims before acting on them, and asks you about design calls or pushback.
 - 🔁 **After a push**: replies on each thread with the fix commit, re-requests review, and leaves resolving threads to the reviewer.
-- ✅ **Ready**: reports it. It never merges unless you asked.
+- 🔀 **Base moved**: when another PR lands and leaves this one conflicting or behind, merges the base in (never rebases or force-pushes), resolves the conflict, and asks you when both sides disagree.
+- ✅ **Ready**: tells you, then keeps watching until the PR is merged or closed, or you say stop. It never merges unless you asked.
 
 Ask only to be told ("let me know when CI finishes") and it reports without touching anything.
 
