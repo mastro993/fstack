@@ -15,6 +15,7 @@
     "workflow"
   ],
   "skills": [
+    "./skills/pr-babysit",
     "./skills/ux-stress-test"
   ],
   "icon": "./.claude-plugin/logo.png"
