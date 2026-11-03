@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Builds remote.git (the simulated GitHub remote) and repo/ (the user's checkout on the PR branch)
 # from fixture/base, fixture/pr, and optional fixture/wip (uncommitted changes), then removes them.
+# Optional fixture/base-next becomes refs/stub/base-next on the remote, committed as scenario.json's
+# "base_next_title": another PR that the stub lands on the base branch later.
 # scenario.json's optional "local_branch" leaves repo/ on that branch instead of the PR's.
 set -eu
 here=$(pwd)
@@ -17,6 +19,12 @@ git checkout -q -b "$head"
 cp -R ../fixture/pr/. .
 git add -A; git commit -qm "$title"; git push -q -u origin "$head"
 sha=$(git rev-parse HEAD)
+if [ -d ../fixture/base-next ]; then
+  git checkout -q --detach "$base"
+  cp -R ../fixture/base-next/. .
+  git add -A; git commit -qm "$(cd .. && read_scn base_next_title)"; git push -q origin HEAD:refs/stub/base-next
+  git checkout -q "$head"
+fi
 local_branch=$(cd .. && python3 -c "import json; print(json.load(open('.gh-stub/scenario.json')).get('local_branch', ''))")
 if [ -n "$local_branch" ]; then git checkout -q "$local_branch"; fi
 if [ -d ../fixture/wip ]; then cp -R ../fixture/wip/. .; fi

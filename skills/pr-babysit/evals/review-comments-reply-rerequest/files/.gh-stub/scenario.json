@@ -7,7 +7,7 @@
  "head": "feat/invoice-csv-export",
  "viewer": "fede",
  "ci_command": "python3 -m unittest discover -s tests -v",
- "ci_delay_seconds": 20,
+ "ci_delay_seconds": 20, "merge_when_ready_after_seconds": 60,
  "approve_on_rerequest": ["alice"],
  "reviews": [
   {"id": "PRR_alice1", "author": "alice", "state": "CHANGES_REQUESTED", "body": "A couple of things before this goes in."},

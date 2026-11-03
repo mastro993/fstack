@@ -7,7 +7,7 @@
  "head": "feat/bulk-discount",
  "viewer": "fede",
  "ci_command": "python3 -m unittest discover -s tests -v",
- "ci_delay_seconds": 45,
+ "ci_delay_seconds": 45, "merge_when_ready_after_seconds": 60,
  "reviews": [
   {"id": "PRR_alice1", "author": "alice", "state": "APPROVED", "body": "LGTM once CI is green."}
  ],
