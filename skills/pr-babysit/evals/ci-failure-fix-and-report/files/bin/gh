@@ -48,15 +48,31 @@ def git(*args, cwd=None):
 
 
 def head():
-    return git("--git-dir", str(REMOTE), "rev-parse", f"refs/heads/{SCN['head']}")
+    return branch_sha(SCN["head"])
+
+
+INFRA_LOG = """Run python3 -m pip install -r requirements-dev.txt
+WARNING: Retrying (Retry(total=0, connect=None, read=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/coverage/
+ERROR: Could not install packages due to an OSError: HTTPSConnectionPool(host='pypi.org', port=443): Max retries exceeded with url: /simple/coverage/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)"))
+Error: Process completed with exit code 1.
+"""
+
+
+def branch_sha(branch):
+    return git("--git-dir", str(REMOTE), "rev-parse", f"refs/heads/{branch}")
 
 
 def ci_result(sha):
-    """('pending', None) or (bucket, log) for the test check on sha."""
+    """('pending', None) or (bucket, log) for the test check on sha. Runs on the base branch finished
+    long ago; with flaky_first_run, the PR's first run dies on an infra error until it is rerun."""
     now = time.time()
+    delay = 0 if sha == branch_sha(SCN["base"]) else SCN.get("ci_delay_seconds", 20)
     first = STATE["first_seen"].setdefault(sha, now)
-    if now - first < SCN.get("ci_delay_seconds", 20):
+    if now - first < delay:
         return "pending", None
+    if SCN.get("flaky_first_run") and sha == SCN["initial_head"] and not STATE.get("flaked"):
+        STATE["flaked"] = True
+        STATE["ci"][sha] = ["fail", INFRA_LOG]
     if sha not in STATE["ci"]:
         with tempfile.TemporaryDirectory() as tmp:
             subprocess.run(["git", "clone", "-q", str(REMOTE), tmp], check=True)
@@ -291,7 +307,7 @@ def rest(args):
                                      "conclusion": {"pass": "success", "fail": "failure"}.get(c["bucket"]),
                                      "html_url": c["link"]} for c in checks()]}, args)
     if path.startswith(f"{base}/actions/runs/") or path.startswith(f"{base}/actions/jobs/"):
-        sha = head()
+        sha = run_sha(path.split("/"))
         bucket, log = ci_result(sha)
         if path.endswith("/logs"):
             print(log or "")
@@ -360,9 +376,15 @@ def pr_cmd(args):
     return 1
 
 
+def run_sha(args):
+    """The commit a run ID argument refers to: the PR head's or the base branch's run."""
+    ids = {str(run_id(s)): s for s in (head(), branch_sha(SCN["base"]))}
+    return next((ids[a] for a in args if a in ids), head())
+
+
 def run_cmd(args):
     sub = args[0]
-    sha = head()
+    sha = run_sha(args[1:])
     if sub == "view":
         bucket, log = ci_result(sha)
         if "--log-failed" in args or "--log" in args:
@@ -378,12 +400,13 @@ def run_cmd(args):
         print(f"CI · {run_id(sha)}\nStatus: {bucket}\nJOBS\n  lint\n  test ({bucket})")
         return 0
     if sub == "list":
-        rows = [{"databaseId": run_id(sha), "headSha": sha, "headBranch": flag(args, "--branch", "-b") or SCN["head"],
-                 "status": "completed", "conclusion": "success", "name": "CI", "workflowName": "CI"}]
-        if (flag(args, "--branch", "-b") or SCN["head"]) == SCN["head"]:
-            b = ci_result(sha)[0]
-            rows[0]["conclusion"] = {"pass": "success", "fail": "failure"}.get(b, "")
-            rows[0]["status"] = "completed" if b != "pending" else "in_progress"
+        branch = flag(args, "--branch", "-b") or SCN["head"]
+        sha = branch_sha(branch)
+        b = ci_result(sha)[0]
+        rows = [{"databaseId": run_id(sha), "headSha": sha, "headBranch": branch, "event": "push" if branch == SCN["base"] else "pull_request",
+                 "status": "completed" if b != "pending" else "in_progress",
+                 "conclusion": {"pass": "success", "fail": "failure"}.get(b, ""), "name": "CI", "workflowName": "CI",
+                 "displayTitle": SCN["title"] if branch == SCN["head"] else "Initial commit", "url": f"https://github.com/{SCN['repo']}/actions/runs/{run_id(sha)}"}]
         return emit([select(r, flag(args, "--json")) for r in rows], args) if "--json" in args else (print(json.dumps(rows)) or 0)
     if sub == "rerun":
         STATE["first_seen"][sha] = time.time()

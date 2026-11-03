@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Builds remote.git (the simulated GitHub remote) and repo/ (the user's checkout on the PR branch)
 # from fixture/base, fixture/pr, and optional fixture/wip (uncommitted changes), then removes them.
+# scenario.json's optional "local_branch" leaves repo/ on that branch instead of the PR's.
 set -eu
 here=$(pwd)
 read_scn() { python3 -c "import json,sys; print(json.load(open('.gh-stub/scenario.json'))[sys.argv[1]])" "$1"; }
@@ -15,8 +16,10 @@ git remote add origin "$here/remote.git"; git push -q -u origin "$base"
 git checkout -q -b "$head"
 cp -R ../fixture/pr/. .
 git add -A; git commit -qm "$title"; git push -q -u origin "$head"
-if [ -d ../fixture/wip ]; then cp -R ../fixture/wip/. .; fi
 sha=$(git rev-parse HEAD)
+local_branch=$(cd .. && python3 -c "import json; print(json.load(open('.gh-stub/scenario.json')).get('local_branch', ''))")
+if [ -n "$local_branch" ]; then git checkout -q "$local_branch"; fi
+if [ -d ../fixture/wip ]; then cp -R ../fixture/wip/. .; fi
 cd "$here"
 python3 - "$sha" <<'PY'
 import json, sys

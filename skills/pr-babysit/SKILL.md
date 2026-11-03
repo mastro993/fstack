@@ -14,7 +14,7 @@ You are the PR's caretaker until it is ready to merge. Wait on GitHub without bu
 `scripts/pr_watch.py` (in this skill's directory) does the GitHub reads, so every check of the PR costs one command:
 
 - `python3 <skill-dir>/scripts/pr_watch.py snapshot [PR]` prints state, failing checks, threads awaiting reply, a `READY:` line with the blockers, and anything new since you last looked.
-- `python3 <skill-dir>/scripts/pr_watch.py wait [PR]` polls every 60 s and exits as soon as something new happens (check failed, all checks passed, new review or comment, merge conflict, PR closed), printing the events and a fresh snapshot. With nothing new it exits after 25 min with `NO CHANGE`.
+- `python3 <skill-dir>/scripts/pr_watch.py wait [PR]` polls every 30 s and exits as soon as something new happens (check failed, all checks passed, new review or comment, merge conflict, PR closed), printing the events and a fresh snapshot. With nothing new it exits after 25 min with `NO CHANGE`.
 
 Whatever either command printed counts as seen, so `wait` never repeats it. Comments by the gh-authenticated account are always treated as seen, since they are your own replies; the user gives you instructions in chat, not on GitHub.
 
@@ -22,7 +22,12 @@ Whatever either command printed counts as seen, so `wait` never repeats it. Comm
 
 1. **Find the PR.** Use the number or URL given; otherwise the PR for the current branch (`gh pr view --json number,url`). If there is none, ask.
 2. **Take the snapshot.** Run `snapshot` and read it fully. Anything already failing or awaiting a reply is your first piece of work, before any waiting.
-3. **Get a checkout you can push from** (skip in watch-only). The working tree must be on the PR's head branch, up to date with the remote. If it's on another branch and clean, `gh pr checkout <n>`. If it has uncommitted changes, stop and ask: they are the user's work in progress, and switching branches or committing over them is not yours to decide. For a PR from a fork, check `maintainerCanModify`; if you can't push, fall back to watch-only and tell the user why.
+3. **Get a checkout you can push from** (skip in watch-only). If the user's working tree is clean and already on the PR's head branch, work there after `git pull --ff-only`. Otherwise leave it alone: uncommitted changes or another checked-out branch are the user's work in progress, and switching, stashing, or committing over them isn't yours to decide. Work in a separate worktree instead:
+   ```bash
+   git fetch origin <head branch>
+   git worktree add --detach ../<repo>-pr-<n> origin/<head branch>
+   ```
+   and push from it with `git push origin HEAD:<head branch>`. Detached, because the branch may already be checked out in the user's tree. Ask the user only if a worktree isn't possible. For a PR from a fork, check `maintainerCanModify`; if you can't push, fall back to watch-only and tell the user why.
 
 ## 2. Wait
 
@@ -57,17 +62,18 @@ Leave threads unresolved: resolving is the reviewer's way of saying they're sati
 ## 5. Push and close the loop
 
 1. Run the project's relevant checks locally (tests, lint, typecheck) on what you changed.
-2. Commit with a message that says what changed and why, following the repo's commit style. One commit per round of fixes is easier for reviewers to follow than one per comment.
-3. Pull before pushing (`git pull --rebase`) in case someone else pushed. Push without force. If the base branch moved and the PR now conflicts, resolve mechanical conflicts with the repo's convention (rebase plus `--force-with-lease` only on a branch nobody else commits to; otherwise merge the base in). Ask about conflicts that need judgment.
-4. Reply on each thread you addressed, saying what changed and the short SHA ("Fixed in a1b2c3d: switched to `csv.writer` so commas in names are quoted."):
+2. Check `git status` and stage only the files you meant to change (`git add <paths>`, never `-A` or `.`). Running tests and builds leaves artifacts (`__pycache__/`, `dist/`, coverage files) that a broad add sweeps into the PR, and once pushed they stay in its history.
+3. Commit with a message that says what changed and why, following the repo's commit style. One commit per round of fixes is easier for reviewers to follow than one per comment.
+4. Pull before pushing in case someone else pushed: `git pull --rebase`, or in a detached worktree `git fetch origin <head branch> && git rebase origin/<head branch>`. Push without force. If the base branch moved and the PR now conflicts, resolve mechanical conflicts with the repo's convention (rebase plus `--force-with-lease` only on a branch nobody else commits to; otherwise merge the base in). Ask about conflicts that need judgment.
+5. Reply on each thread you addressed, saying what changed and the short SHA ("Fixed in a1b2c3d: switched to `csv.writer` so commas in names are quoted."):
    ```bash
    gh api graphql -f query='mutation($id: ID!, $body: String!) {
      addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: $id, body: $body}) { comment { url } }
    }' -f id=<thread id from the snapshot> -f body='<reply>'
    ```
    Top-level comments get a top-level reply: `gh pr comment <n> --body '<reply>'`.
-5. When every thread from a human reviewer who requested changes or asked questions has a reply, re-request their review: `gh pr edit <n> --add-reviewer <login>`. Bots usually re-review on push by themselves; don't re-request them.
-6. Tell the user in a line or two what you fixed and pushed, then go back to waiting.
+6. When every thread from a human reviewer who requested changes or asked questions has a reply, re-request their review: `gh pr edit <n> --add-reviewer <login>`. Bots usually re-review on push by themselves; don't re-request them.
+7. Tell the user in a line or two what you fixed and pushed, then go back to waiting.
 
 ## 6. Finish
 
@@ -78,4 +84,4 @@ Stop watching when:
 - **Blocked on the user** and there's nothing else to wait for (for example, the only open item is a question you asked them): ask, and say the watch will resume once they answer.
 - **Watch-only and the thing they asked about happened**: report it. For a failed check, include which check, the failing test or error quoted exactly, and your read of the cause, but change nothing.
 
-When you stop, end any background `wait` you started (and unwatch with the host tool, if you used one), so nothing keeps waking you after the job is done.
+When you stop, end any background `wait` you started (and unwatch with the host tool, if you used one), so nothing keeps waking you after the job is done, and remove any worktree you created (`git worktree remove <path>`).

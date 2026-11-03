@@ -110,27 +110,32 @@ def excerpt(text, limit=300):
 
 
 def activity_items(pr):
-    """Yield (id, author, line) for every comment and review on the PR."""
+    """Yield (id, author, thread id or None, line) for every comment and review on the PR."""
     act = pr["activity"]
     for thread in act["reviewThreads"]["nodes"]:
         where = f"{thread['path']}:{thread['line'] or '?'}"
         for c in thread["comments"]["nodes"]:
-            yield c["id"], login(c), f"review comment {where} by {login(c)} [thread {thread['id']}]: {excerpt(c['body'])}"
+            yield c["id"], login(c), thread["id"], f"review comment {where} by {login(c)} [thread {thread['id']}]: {excerpt(c['body'])}"
     for r in act["reviews"]["nodes"]:
         if r["body"] or r["state"] in ("APPROVED", "CHANGES_REQUESTED"):
-            yield r["id"], login(r), f"review {r['state']} by {login(r)}: {excerpt(r['body'])}"
+            yield r["id"], login(r), None, f"review {r['state']} by {login(r)}: {excerpt(r['body'])}"
     for c in act["comments"]["nodes"]:
-        yield c["id"], login(c), f"comment by {login(c)}: {excerpt(c['body'])} ({c['url']})"
+        yield c["id"], login(c), None, f"comment by {login(c)}: {excerpt(c['body'])} ({c['url']})"
 
 
 def new_events(pr, state):
-    """Return lines for everything not yet shown, and record it as seen."""
-    events, seen = [], set(state["seen"])
+    """Return (event lines, ids of awaiting-reply threads with new comments) for everything not yet
+    shown, and record it as seen. Those threads are listed by summary(), so they get no event line."""
+    events, new_threads, seen = [], set(), set(state["seen"])
+    awaiting = {t["id"] for t in awaiting_reply(pr)}
     if pr["state"] != "OPEN":
         events.append(f"PR {pr['state']}")
-    for item_id, author, line in activity_items(pr):
+    for item_id, author, thread_id, line in activity_items(pr):
         if item_id not in seen and author != pr["viewer"]:
-            events.append(f"NEW {line}")
+            if thread_id in awaiting:
+                new_threads.add(thread_id)
+            else:
+                events.append(f"NEW {line}")
         seen.add(item_id)
     state["seen"] = sorted(seen)
 
@@ -151,7 +156,7 @@ def new_events(pr, state):
     if pr["mergeable"] == "CONFLICTING" and head not in state["conflicts"]:
         events.append(f"MERGE CONFLICT with {pr['baseRefName']}")
         state["conflicts"].append(head)
-    return events
+    return events, new_threads
 
 
 def awaiting_reply(pr):
@@ -161,7 +166,7 @@ def awaiting_reply(pr):
             and login(t["comments"]["nodes"][-1]) != pr["viewer"]]
 
 
-def summary(pr):
+def summary(pr, new_threads=()):
     checks = pr["checks"]
     counts = {b: sum(c["bucket"] == b for c in checks) for b in ("pass", "fail", "cancel", "pending", "skipping")}
     pending_review = [r.get("login") or r.get("name") for r in pr["reviewRequests"]]
@@ -194,7 +199,7 @@ def summary(pr):
     lines += [f"  {c['bucket'].upper()} {c['name']} {c['link']}" for c in checks if c["bucket"] in FAILED]
     for t in waiting:
         last = t["comments"]["nodes"][-1]
-        lines.append(f"  awaiting reply: thread {t['id']} {t['path']}:{t['line'] or '?'}"
+        lines.append(f"  {'NEW ' if t['id'] in new_threads else ''}awaiting reply: thread {t['id']} {t['path']}:{t['line'] or '?'}"
                      f"{' (outdated)' if t['isOutdated'] else ''} — {login(last)}: {excerpt(last['body'], 160)}")
     lines.append("READY: yes" if not blockers else "READY: no — " + "; ".join(blockers))
     return "\n".join(lines)
@@ -203,9 +208,9 @@ def summary(pr):
 def cmd_snapshot(pr_arg):
     pr = fetch(pr_arg)
     state = load_state(pr["key"])
-    events = new_events(pr, state)
+    events, new_threads = new_events(pr, state)
     save_state(pr["key"], state)
-    print(summary(pr))
+    print(summary(pr, new_threads))
     if events:
         print("\nNew since last look:\n" + "\n".join(events))
 
@@ -223,10 +228,12 @@ def cmd_wait(pr_arg, interval, timeout):
                 return 1
         else:
             state = load_state(pr["key"])
-            events = new_events(pr, state)
+            events, new_threads = new_events(pr, state)
             save_state(pr["key"], state)
+            if new_threads:
+                events.append(f"NEW comments on {len(new_threads)} thread(s) awaiting reply, marked NEW below")
             if events:
-                print("\n".join(events) + "\n\n" + summary(pr))
+                print("\n".join(events) + "\n\n" + summary(pr, new_threads))
                 return 0
         if time.monotonic() + interval > deadline:
             print(f"NO CHANGE in {timeout // 60} min. Re-arm the wait.")
@@ -238,8 +245,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=["snapshot", "wait"])
     parser.add_argument("pr", nargs="?", help="PR number, URL, or branch (default: current branch)")
-    parser.add_argument("--interval", type=int, default=int(os.environ.get("PR_WATCH_INTERVAL", 60)),
-                        help="seconds between polls (default 60)")
+    parser.add_argument("--interval", type=int, default=int(os.environ.get("PR_WATCH_INTERVAL", 30)),
+                        help="seconds between polls (default 30)")
     parser.add_argument("--timeout", type=int, default=1500, help="seconds before giving up quietly (default 1500)")
     args = parser.parse_args()
     pr_arg = [args.pr] if args.pr else []
