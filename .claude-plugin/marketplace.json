@@ -1,0 +1,17 @@
+{
+  "name": "fedemas",
+  "owner": {
+    "name": "Federico Mastrini",
+    "url": "https://fedemas.dev"
+  },
+  "description": "Federico Mastrini's Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "fstack",
+      "source": "./",
+      "description": "Federico Mastrini's Claude Code skills for everyday software engineering work.",
+      "category": "engineering",
+      "keywords": ["engineering", "skills", "workflow"]
+    }
+  ]
+}

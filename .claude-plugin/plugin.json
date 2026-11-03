@@ -1,0 +1,21 @@
+{
+  "name": "fstack",
+  "description": "Federico Mastrini's Claude Code skills for everyday software engineering work.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Federico Mastrini",
+    "url": "https://fedemas.dev"
+  },
+  "homepage": "https://www.fedemas.dev/fstack",
+  "repository": "https://github.com/mastro993/fstack",
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "skills",
+    "workflow"
+  ],
+  "skills": [
+    "./skills/ux-stress-test"
+  ],
+  "icon": "./.claude-plugin/logo.png"
+}
