@@ -1,6 +1,6 @@
 ---
 name: pr-babysit
-description: Use when the user asks to monitor, watch, babysit, shepherd, or keep an eye on a pull request through CI and code review, or to "get this PR green", "land this PR", "fix CI and address the review comments", or "tell me when CI finishes". Waits on GitHub, fixes failing checks, answers and addresses review comments (human and bot), pushes, re-requests review, and reports when the PR is ready to merge.
+description: Use when the user asks to monitor, watch, babysit, or keep an eye on a pull request through CI and review, or to get a PR green or mergeable.
 compatibility: Needs the gh CLI (authenticated), git, python3, and a checkout of the PR's repository to push fixes from.
 ---
 
