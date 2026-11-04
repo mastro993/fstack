@@ -14,6 +14,20 @@
 
 ---
 
+## 📑 Contents
+
+- [Install](#-install)
+  - [Claude Code](#claude-code)
+  - [GitHub Copilot](#github-copilot)
+  - [Codex](#codex)
+  - [Pi](#pi)
+  - [oh-my-pi](#oh-my-pi)
+  - [Any other agent](#any-other-agent)
+- [Skills](#-skills)
+  - [pr-babysit](#pr-babysit)
+  - [ux-stress-test](#ux-stress-test)
+- [License](#-license)
+
 ## 🥞 Install
 
 fstack installs natively in Claude Code, GitHub Copilot, Codex, Pi, and oh-my-pi, and through the skills CLI in any other agent. Start a new session after installing so your agent loads the skills.
