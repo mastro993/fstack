@@ -1,6 +1,6 @@
 {
   "name": "fstack",
-  "description": "Federico Mastrini's Claude Code skills for everyday software engineering work.",
+  "description": "Federico Mastrini's agent skills for everyday software engineering work.",
   "version": "0.1.2",
   "author": {
     "name": "Federico Mastrini",
