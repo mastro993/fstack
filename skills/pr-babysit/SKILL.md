@@ -24,7 +24,7 @@ Fix failures and review comments as you normally would, minding these:
 - **The user's checkout.** If it has uncommitted changes or another branch checked out, leave it untouched (no switch, stash, or commit). Work in `git worktree add --detach ../<repo>-pr-<n> origin/<head branch>` (after `git fetch`) and push with `git push origin HEAD:<head branch>`.
 - **Base moved.** On `MERGE CONFLICT` or `BEHIND`, merge the base into the PR branch (never rebase: the shared branch keeps its history): `git fetch origin && git merge origin/<base>`, resolve keeping what both sides meant, run the tests, commit, push. With no conflict, `gh pr update-branch <n>` does the same on GitHub. If the sides change the same behavior incompatibly, ask the user. If the push dismissed approvals, re-request those reviewers.
 - **CI.** A failure that also happens on the base branch isn't this PR's to fix: report it. Infra failures (runner lost, network timeouts) get one `gh run rerun <id> --failed`. Stop and ask after two failed attempts at the same check.
-- **The user's calls.** Design changes, scope growth, and disagreeing with a human reviewer go to the user; reply on their behalf only with what they decide.
+- **The user's calls.** Design changes, scope growth, and disagreeing with a human reviewer go to the user, and the reply stays theirs to post.
 - **Bots.** Check a bot's claim against the code before acting; if it's wrong, reply briefly with why.
 - **Commits.** Stage only the files you changed (`git add <paths>`): tests and builds leave artifacts like `__pycache__/` that a broad add pushes into the PR for good. Never force-push a shared branch.
 - **Replies.** Reply on each thread you addressed with what changed and the short SHA:
