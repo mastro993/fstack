@@ -1,7 +1,7 @@
 {
   "name": "fstack",
   "description": "Federico Mastrini's agent skills for everyday software engineering work.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": {
     "name": "Federico Mastrini",
     "url": "https://fedemas.dev"
@@ -17,6 +17,7 @@
   "skills": [
     "./skills/pr-babysit",
     "./skills/pr-ship",
+    "./skills/ux-brainstorm",
     "./skills/ux-stress-test"
   ],
   "icon": "./.claude-plugin/logo.png"
