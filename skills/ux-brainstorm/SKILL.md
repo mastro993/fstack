@@ -81,11 +81,11 @@ When the user mixes variants or asks for changes, add the result as a new letter
 
 ## 7. Hand off
 
-Write the handoff into the project, never `RUN`, which may end with the session. Copy the approved prototypes, `decisions.md`, and `references.md` to `OUT`, and cite only project paths in every record, issue, and reply.
+Write the handoff into the project, never `RUN`, which may end with the session. Copy the approved prototypes, `decisions.md`, and `references.md` to `OUT`. `OUT` is git-ignored and local to this machine, so every record and issue must stand without it: describe each approved variant in words, add a light-theme screenshot of it (from the preview tool or a headless browser), and mark any `OUT` path as local. Attach the screenshot to each issue that builds that area; to embed it in a decision record, save it beside the record.
 
 Use the project's own format when it has one: decision records that keep the alternatives the user rejected, glossary updates, and issues or tickets as vertical slices with dependency order, `file:line` references, and acceptance checks. Show the issue list, and file it in the tracker only once the user approves. Otherwise write `OUT/spec.md`. Either way, cover:
 
-- **Decisions and picks**: the decisions and the approved variant per area, with prototype paths and reference links.
+- **Decisions and picks**: the decisions and the approved variant per area, in words with its screenshot, plus reference links and the local prototype path.
 - **States**: each area's states, what triggers them, and what they show.
 - **Component map**: each element → the project component that renders it, or, when none fits, the closest existing pattern to build it from. With no codebase, the platform's standard components.
 - **Tokens**: each color, size, radius, and spacing → the project token, or **new**.
