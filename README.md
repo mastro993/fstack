@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.2.1-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.3.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -26,6 +26,7 @@
 - [Skills](#-skills)
   - [pr-babysit](#pr-babysit)
   - [pr-ship](#pr-ship)
+  - [ux-brainstorm](#ux-brainstorm)
   - [ux-stress-test](#ux-stress-test)
 - [License](#-license)
 
@@ -104,6 +105,7 @@ npx skills add mastro993/fstack --skill pr-babysit --agent cursor -g -y
 | --- | --- |
 | [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Your agent fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, tells you when the PR is ready to merge, and keeps watching until it lands. |
 | [**pr-ship**](skills/pr-ship/SKILL.md) | Ships a change. Your agent opens the PR or marks your draft ready, babysits it with pr-babysit, keeps asking the automated reviewers for another pass until one comes back clean, and merges it. |
+| [**ux-brainstorm**](skills/ux-brainstorm/SKILL.md) | Designs a UI with you before anyone builds it. Your agent maps what exists, interviews you about behavior, finds real-world inspiration, and lets you pick between interactive prototypes right in the chat, then hands off a plan that maps every element to your components. |
 | [**ux-stress-test**](skills/ux-stress-test/SKILL.md) | Five first-time-user personas try to reach first success in your web app in a real browser. Your agent ranks the friction they hit, fixes what you choose, and reruns the personas blind to prove the fixes, or opens issues for later. |
 
 ### pr-babysit
@@ -134,6 +136,22 @@ Say the word and your agent takes the change all the way to the base branch:
 **Needs:** pr-babysit (install both) and everything it needs.
 
 **Try it:** ask your agent to *"ship it"*, *"get this into main"*, or *"merge #42"*.
+
+### ux-brainstorm
+
+You decide the UX; your agent does the legwork:
+
+- 🗺️ **Map**: reads the screens, rules, components, and icons your request touches, so its questions come from real gaps.
+- 🎤 **Interview**: plain-language questions about behavior and rules, a recommended answer first. Layout is left to the prototypes.
+- 🖼️ **Inspiration**: searches [Mobbin](https://mobbin.com) for real screens and flows, or asks where to look when Mobbin isn't connected.
+- 🧭 **Direction**: when the look is still open (a new product, no design system), you pick from two or three directions.
+- 🧪 **Prototypes**: one per screen or component, rendered in the chat. A letter bar switches between 2–4 structural variants, and every state is one click away.
+- ✂️ **Lean copy**: icons replace any label an icon can carry, with tooltips for context, and no helper paragraphs.
+- 📐 **Handoff**: in your project's own format (decision records, glossary, issues) or a spec, mapping every element, token, and string to your project, then an offer to build it.
+
+**Needs:** the [Mobbin MCP](https://mobbin.com) for inspiration (optional), subagents for speed (optional), and a harness that renders HTML inline, such as T3 Code; elsewhere the prototypes open in your browser.
+
+**Try it:** ask your agent to *"brainstorm a new onboarding flow"* or *"what should our settings page look like?"*.
 
 ### ux-stress-test
 
