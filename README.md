@@ -33,8 +33,6 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 
 ## 🧈 Skills
 
-Each link opens the skill's definition, which says when it triggers, what it does, and what it needs.
-
 - **Planning**
   - [feature-design](skills/feature-design/SKILL.md)
 - **UX**
