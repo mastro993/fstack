@@ -16,6 +16,8 @@
 
 ## 📑 Contents
 
+- [What it is](#-what-it-is)
+- [Skills](#-skills)
 - [Install](#-install)
   - [Claude Code](#claude-code)
   - [GitHub Copilot](#github-copilot)
@@ -23,19 +25,27 @@
   - [Pi](#pi)
   - [oh-my-pi](#oh-my-pi)
   - [Any other agent](#any-other-agent)
-- [Skills](#-skills)
-  - [comment-sweep](#comment-sweep)
-  - [feature-design](#feature-design)
-  - [pr-babysit](#pr-babysit)
-  - [pr-ship](#pr-ship)
-  - [resolve-merge-conflicts](#resolve-merge-conflicts)
-  - [ux-brainstorm](#ux-brainstorm)
-  - [ux-stress-test](#ux-stress-test)
 - [License](#-license)
 
-## 🥞 Install
+## 🥞 What it is
 
-fstack installs natively in Claude Code, GitHub Copilot, Codex, Pi, and oh-my-pi, and through the skills CLI in any other agent. Start a new session after installing so your agent loads the skills.
+fstack turns everyday engineering workflows into skills your coding agent runs end to end. Ask in plain words and the agent follows the same proven steps every time, coming back to you only for the decisions that are yours to make.
+
+## 🧈 Skills
+
+Each link opens the skill's definition, which says when it triggers, what it does, and what it needs.
+
+| Area | Skills |
+| --- | --- |
+| Design | [feature-design](skills/feature-design/SKILL.md) · [ux-brainstorm](skills/ux-brainstorm/SKILL.md) |
+| Quality | [comment-sweep](skills/comment-sweep/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) |
+| Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
+
+The pull request skills build on each other: **pr-ship** uses **pr-babysit**, which uses **resolve-merge-conflicts**. Install them together.
+
+## 📦 Install
+
+Start a new session after installing so your agent loads the skills.
 
 ### Claude Code
 
@@ -99,127 +109,8 @@ npx skills add mastro993/fstack
 It asks which skills and agents you want, and installs into the current project unless you add `-g`. To skip the questions, name them:
 
 ```sh
-npx skills add mastro993/fstack --skill pr-babysit --agent cursor -g -y
+npx skills add mastro993/fstack --skill pr-babysit --skill resolve-merge-conflicts --agent cursor -g -y
 ```
-
-## 🧈 Skills
-
-| Skill | What it does |
-| --- | --- |
-| [**comment-sweep**](skills/comment-sweep/SKILL.md) | Deletes the comments your branch adds that don't earn their place. Your agent keeps the ones tools read and the ones that carry real knowledge, checks warnings against the code's history before touching them, proves only comments changed, and reports what code should change so its comment can go too. |
-| [**feature-design**](skills/feature-design/SKILL.md) | Turns a rough idea into a spec ready to build. Your agent checks the idea against your docs, code, and outside research, tells you what's wrong with it, settles the product decisions in at most three short rounds of questions, makes and explains the technical ones, and records it all as decision records, a glossary, and a spec, then opens issues or starts the build in a fresh session. |
-| [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Your agent fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, tells you when the PR is ready to merge, and keeps watching until it lands. |
-| [**pr-ship**](skills/pr-ship/SKILL.md) | Ships a change. Your agent opens the PR or marks your draft ready, babysits it with pr-babysit, keeps asking the automated reviewers for another pass until one comes back clean, and merges it. |
-| [**resolve-merge-conflicts**](skills/resolve-merge-conflicts/SKILL.md) | Resolves merge and rebase conflicts by what each side meant. Your agent reads the commits, pull requests, issues, and tickets behind both sides, keeps both changes where they fit together, sides with the change you're landing where they can't, runs your checks and the app, and finishes the merge or the whole rebase. |
-| [**ux-brainstorm**](skills/ux-brainstorm/SKILL.md) | Designs a UI with you before anyone builds it. Your agent maps what exists, interviews you about behavior, finds real-world inspiration, and lets you pick between interactive prototypes right in the chat, then hands off a plan that maps every element to your components. |
-| [**ux-stress-test**](skills/ux-stress-test/SKILL.md) | Five first-time-user personas try to reach first success in your web app in a real browser. Your agent ranks the friction they hit, fixes what you choose, and reruns the personas blind to prove the fixes, or opens issues for later. |
-
-### comment-sweep
-
-Your agent asks of every comment whether it says something true that the code can't:
-
-- 🧹 **Delete**: narration, restated signatures, change history ("fixed the bug", "now uses X"), commented-out code, banners, and finished TODOs.
-- 🔒 **Keep**: comments tools read (`eslint-disable`, `@ts-expect-error`, `//go:build`, `# type: ignore`, doctests, licences), public API contracts, and the reasons behind constraints the code can't show, like vendor bugs or protocol rules.
-- 🔎 **Investigate**: warnings, workarounds, and untracked TODOs get checked against the callers and the history (blame, PR, issue) before a verdict. A true warning stays until a test or type enforces it.
-- 🪓 **Reshape targets**: where the code needs a comment to make sense, it names the rename, extraction, type, or test that would make the comment unnecessary, and offers to do it as a separate change.
-- ⚠️ **Mismatches**: a comment that contradicts the code goes, and is reported, since the code may be the bug.
-- ✅ **Proof**: a bundled script compares every file token by token with comments set aside, so a sweep can't change code or drop a suppression by accident; then lint, typecheck, and tests run.
-
-It sweeps only the comments your branch adds or changes, so the diff stays reviewable and the blame on older code stays intact.
-
-**Needs:** python3 and git.
-
-**Try it:** ask your agent to *"clean up the comments in my branch"* or *"strip the AI narration from my changes before I open the PR"*.
-
-### feature-design
-
-You own what the feature is for; your agent owns how it gets built:
-
-- 🔎 **Ground**: reads your docs, decision records, glossary, code, and tracker, and researches how others solved the same problem, before asking anything.
-- 🥊 **Challenge**: tells you what's wrong with the idea as stated (it exists, it contradicts a past decision, a smaller change does the job) and proposes a better shape.
-- 🎤 **Interview**: at most three rounds of five questions, always with options to pick from, on scope, behavior, and UX only. Examples, diagrams, mockups, or a small prototype make sure you know what you're choosing.
-- 📖 **Glossary**: pins down the words as you talk, and corrects the ones that clash with the project's.
-- 🛠️ **Design**: makes the technical decisions itself, then explains each one in plain English: what, and why it follows from what you asked for.
-- 🗂️ **Document**: one decision record per non-trivial decision in `docs/adr/`, the glossary in `GLOSSARY.md`, and a full spec in `docs/specs/`. The next design session reads them first.
-- 🚀 **Handoff**: opens issues as shippable slices with their dependencies and implementation order, starts the build in a fresh session, or both.
-
-**Needs:** a question tool such as AskUserQuestion (optional; otherwise lettered options in chat), the [Exa MCP](https://exa.ai) for research (otherwise your agent's own web search), and an issue tracker CLI or MCP such as [gh](https://cli.github.com) for the issues handoff.
-
-**Try it:** ask your agent *"I'm thinking of adding team invites, help me design it"* or *"design how offline mode should work with me"*.
-
-### pr-babysit
-
-Your agent waits on GitHub without burning turns and reacts as things happen:
-
-- 🔴 **Failing check**: reads the failed log once, fixes the root cause, reruns infra flakes once, and stops after two failed attempts.
-- 💬 **Review comment**: fixes what's clear, answers questions from the code, checks bot claims before acting on them, and asks you about design calls or pushback.
-- 🔁 **After a push**: replies on each thread with the fix commit, re-requests review, and leaves resolving threads to the reviewer.
-- 🔀 **Base moved**: when another PR lands and leaves this one conflicting or behind, merges the base in (never rebases or force-pushes) and resolves the conflicts with [resolve-merge-conflicts](#resolve-merge-conflicts).
-- ✅ **Ready**: tells you, then keeps watching until the PR is merged or closed, or you say stop. It never merges unless you asked; landing it is [pr-ship](#pr-ship)'s job.
-
-Ask only to be told ("let me know when CI finishes") and it reports without touching anything.
-
-**Needs:** resolve-merge-conflicts (install both), an authenticated [gh](https://cli.github.com) CLI, git, python3, and a checkout of the PR's branch to push fixes from.
-
-**Try it:** ask your agent to *"babysit PR #42"* or *"watch my PR and fix whatever CI or review throws at it"*.
-
-### pr-ship
-
-Say the word and your agent takes the change all the way to the base branch:
-
-- 🚀 **Open**: commits and pushes the change if needed, then opens the PR from your template, or marks your draft ready.
-- 🍼 **Babysit**: hands failing checks, review threads, and a moving base to [pr-babysit](#pr-babysit).
-- 🤖 **Review rounds**: gets each automated reviewer on the repo (CodeRabbit, Pullfrog, Claude, Copilot, Codex, Bugbot, Greptile, and more) to review the latest push, fixes what they find, and asks again until a round comes back clean. If three rounds of fixes still turn up new findings, it asks you whether to keep going.
-- ✅ **Merge**: squash-merges when the repo allows it (otherwise with the method it allows), pinned to the commit that passed, and only through the repo's rules, never with `--admin`.
-
-**Needs:** pr-babysit and resolve-merge-conflicts (install all three) and everything they need.
-
-**Try it:** ask your agent to *"ship it"*, *"get this into main"*, or *"merge #42"*.
-
-### resolve-merge-conflicts
-
-Git shows you where two changes collide; your agent works out why each one was made:
-
-- 🧭 **Start**: merges or rebases the way you asked (otherwise the repo's convention, or a merge for a branch that's already pushed), with the common ancestor shown in every conflict, and leaves a dirty checkout alone by working in a separate worktree.
-- 🔎 **Intent**: for every conflict, reads the commits on both sides, their pull requests and reviews, the issues they close, and any ticket they mention, and writes down what each side meant before editing a line.
-- 🤝 **Resolve**: keeps both changes when they can coexist, adapting one to the other's renames and moves. When they can't, it keeps the change you're landing and tells you what the other side loses. It asks first only if that would drop a security or data-loss fix. It never invents behavior neither side had, and regenerates lockfiles and generated code instead of hand-merging them.
-- ✅ **Check**: runs what your CI runs, which catches the breakage git can't see (one side renamed a function, the other added a call to the old name), and tells a failure it caused apart from one already on the base.
-- 🖥️ **Verify**: runs the app and exercises both sides' behavior when the conflict touched something a user sees.
-- 🏁 **Finish**: commits the merge, or continues the rebase commit by commit until every one is replayed, pushes when the conflict was a PR's, and reports each conflict with both intents and their sources.
-
-**Needs:** git 2.45 or newer, and the [gh](https://cli.github.com) CLI and your issue tracker's CLI or MCP to read why each side changed (optional, but it's where the reasons live).
-
-**Try it:** ask your agent to *"fix the conflicts on PR #42"*, *"rebase my branch onto main"*, or *"merge main into this branch"*.
-
-### ux-brainstorm
-
-You decide the UX; your agent does the legwork:
-
-- 🗺️ **Map**: reads the screens, rules, components, and icons your request touches, so its questions come from real gaps.
-- 🎤 **Interview**: plain-language questions about behavior and rules, a recommended answer first. Layout is left to the prototypes.
-- 🖼️ **Inspiration**: searches [Mobbin](https://mobbin.com) for real screens and flows, or asks where to look when Mobbin isn't connected.
-- 🧭 **Direction**: when the look is still open (a new product, no design system), you pick from two or three directions.
-- 🧪 **Prototypes**: one per screen or component, rendered in the chat. A letter bar switches between 2–4 structural variants, and every state is one click away.
-- ✂️ **Lean copy**: icons replace any label an icon can carry, with tooltips for context, and no helper paragraphs.
-- 📐 **Handoff**: in your project's own format (decision records, glossary, issues) or a spec, mapping every element, token, and string to your project, then an offer to build it.
-
-**Needs:** the [Mobbin MCP](https://mobbin.com) for inspiration (optional), subagents for speed (optional), and a harness that renders HTML inline, such as T3 Code; elsewhere the prototypes open in your browser.
-
-**Try it:** ask your agent to *"brainstorm a new onboarding flow"* or *"what should our settings page look like?"*.
-
-### ux-stress-test
-
-The personas each break your app in their own way:
-
-- ⏱️ **Impatient**: skims, clicks the biggest button, and quits at the first error.
-- 🤨 **Skeptic**: wants to know what they're signing up for before handing over anything.
-- 📱 **Mobile**: small screen, touch only, slow 3G.
-- 🌍 **Non-native**: reads your copy literally.
-- 🔨 **Breaker**: submits junk, double-clicks, and goes back mid-flow.
-
-**Needs:** subagents, Chrome, [browser-use](https://github.com/browser-use/browser-use) (`uv tool install browser-use`) or playwright-cli as a fallback, and the app's source code.
-
-**Try it:** ask your agent to *"stress-test the signup flow"* or *"run a UX stress test before launch"*.
 
 ## 📄 License
 
