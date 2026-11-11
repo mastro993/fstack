@@ -42,8 +42,6 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 
 ## 📦 Install
 
-Start a new session after installing so your agent loads the skills.
-
 ### Claude Code
 
 ```
