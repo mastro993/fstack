@@ -37,8 +37,9 @@ Each link opens the skill's definition, which says when it triggers, what it doe
 
 | Area | Skills |
 | --- | --- |
-| Design | [feature-design](skills/feature-design/SKILL.md) · [ux-brainstorm](skills/ux-brainstorm/SKILL.md) |
-| Quality | [comment-sweep](skills/comment-sweep/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) |
+| Planning | [feature-design](skills/feature-design/SKILL.md) |
+| UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) |
+| Code quality | [comment-sweep](skills/comment-sweep/SKILL.md) |
 | Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
 
 The pull request skills build on each other: **pr-ship** uses **pr-babysit**, which uses **resolve-merge-conflicts**. Install them together.
