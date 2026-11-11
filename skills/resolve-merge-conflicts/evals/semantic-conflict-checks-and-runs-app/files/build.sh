@@ -125,7 +125,19 @@ const tax = Math.round(sub * order.taxRate);
 console.log(taxLine(sub, order.taxRate));
 console.log(`Total: ${formatPrice(sub + tax)}`);
 X
-sed -i '' "s/'3 x Pen @ \$1.25'/'3 x Pen @ \$1.25 = \$3.75'/; s/shows quantity, name and unit price/shows quantity, name, unit price and line total/" test/cart.test.js
+put test/cart.test.js <<'X'
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { describeLine, subtotal } from '../src/cart.js';
+
+test('describeLine shows quantity, name, unit price and line total', () => {
+  assert.equal(describeLine({ name: 'Pen', price: 125, qty: 3 }), '3 x Pen @ $1.25 = $3.75');
+});
+
+test('subtotal sums the lines', () => {
+  assert.equal(subtotal([{ price: 125, qty: 3 }, { price: 450, qty: 2 }]), 1275);
+});
+X
 commit "line totals" 33
 git push -q -u origin receipt-tax
 
