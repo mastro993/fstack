@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.3.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.4.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -24,6 +24,7 @@
   - [oh-my-pi](#oh-my-pi)
   - [Any other agent](#any-other-agent)
 - [Skills](#-skills)
+  - [feature-design](#feature-design)
   - [pr-babysit](#pr-babysit)
   - [pr-ship](#pr-ship)
   - [ux-brainstorm](#ux-brainstorm)
@@ -103,10 +104,27 @@ npx skills add mastro993/fstack --skill pr-babysit --agent cursor -g -y
 
 | Skill | What it does |
 | --- | --- |
+| [**feature-design**](skills/feature-design/SKILL.md) | Turns a rough idea into a spec ready to build. Your agent checks the idea against your docs, code, and outside research, tells you what's wrong with it, settles the product decisions in at most three short rounds of questions, makes and explains the technical ones, and records it all as decision records, a glossary, and a spec, then opens issues or starts the build in a fresh session. |
 | [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Your agent fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, tells you when the PR is ready to merge, and keeps watching until it lands. |
 | [**pr-ship**](skills/pr-ship/SKILL.md) | Ships a change. Your agent opens the PR or marks your draft ready, babysits it with pr-babysit, keeps asking the automated reviewers for another pass until one comes back clean, and merges it. |
 | [**ux-brainstorm**](skills/ux-brainstorm/SKILL.md) | Designs a UI with you before anyone builds it. Your agent maps what exists, interviews you about behavior, finds real-world inspiration, and lets you pick between interactive prototypes right in the chat, then hands off a plan that maps every element to your components. |
 | [**ux-stress-test**](skills/ux-stress-test/SKILL.md) | Five first-time-user personas try to reach first success in your web app in a real browser. Your agent ranks the friction they hit, fixes what you choose, and reruns the personas blind to prove the fixes, or opens issues for later. |
+
+### feature-design
+
+You own what the feature is for; your agent owns how it gets built:
+
+- 🔎 **Ground**: reads your docs, decision records, glossary, code, and tracker, and researches how others solved the same problem, before asking anything.
+- 🥊 **Challenge**: tells you what's wrong with the idea as stated (it exists, it contradicts a past decision, a smaller change does the job) and proposes a better shape.
+- 🎤 **Interview**: at most three rounds of five questions, always with options to pick from, on scope, behavior, and UX only. Examples, diagrams, mockups, or a small prototype make sure you know what you're choosing.
+- 📖 **Glossary**: pins down the words as you talk, and corrects the ones that clash with the project's.
+- 🛠️ **Design**: makes the technical decisions itself, then explains each one in plain English: what, and why it follows from what you asked for.
+- 🗂️ **Document**: one decision record per non-trivial decision in `docs/adr/`, the glossary in `GLOSSARY.md`, and a full spec in `docs/specs/`. The next design session reads them first.
+- 🚀 **Handoff**: opens issues as shippable slices with their dependencies and implementation order, starts the build in a fresh session, or both.
+
+**Needs:** a question tool such as AskUserQuestion (optional; otherwise lettered options in chat), the [Exa MCP](https://exa.ai) for research (otherwise your agent's own web search), and an issue tracker CLI or MCP such as [gh](https://cli.github.com) for the issues handoff.
+
+**Try it:** ask your agent *"I'm thinking of adding team invites, help me design it"* or *"design how offline mode should work with me"*.
 
 ### pr-babysit
 
