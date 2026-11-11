@@ -78,6 +78,12 @@ class Lexing(unittest.TestCase):
         self.assertEqual([kind for _, kind in found], ["doc", "directive", "directive", "comment", "directive"])
         self.assertNotIn('"""Module doc."""', code)
 
+    def test_python_docstring_deletion_keeps_the_code(self):
+        self.assertTrue(same_code("a.py", 'def f():\n    """Doc."""  # note\n    return 1\n', "def f():\n    return 1\n"))
+        self.assertTrue(same_code("a.py", '"""Module."""\nimport os\n', "import os\n"))
+        self.assertTrue(same_code("a.py", 'class A:\n    """Doc."""\n    x = 1\n', "class A:\n    x = 1\n"))
+        self.assertFalse(same_code("a.py", 'def f():\n    """Only statement."""\n', "def f():\n"))
+
     def test_python_indentation_counts(self):
         before = "if a:\n    b()\n    # c\n    d()\n"
         self.assertTrue(same_code("a.py", before, "if a:\n    b()\n    d()\n"))

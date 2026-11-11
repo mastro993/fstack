@@ -305,19 +305,22 @@ def scan_python(src):
     toks = list(tokenize.generate_tokens(io.StringIO(src).readline))
     tokens, comments = [], []
     sig = [t for t in toks if t.type not in (tokenize.NL, tokenize.COMMENT)]
-    docs = set()
+    docs, ends = set(), set()  # docstring starts, and the NEWLINEs that end those statements
     for k, t in enumerate(sig):
         before = sig[k - 1].type if k else tokenize.NEWLINE
         after = sig[k + 1].type if k + 1 < len(sig) else tokenize.NEWLINE
         if t.type == tokenize.STRING and before in (tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT) and after in (tokenize.NEWLINE, tokenize.ENDMARKER):
             docs.add(t.start)
+            if k + 1 < len(sig) and after == tokenize.NEWLINE:
+                ends.add(sig[k + 1].start)
     for t in toks:
         if t.type == tokenize.COMMENT:
             comments.append((t.string, t.start[0], not t.line[: t.start[1]].strip()))
         elif t.type == tokenize.STRING and t.start in docs:
             comments.append((t.string, t.start[0], True, "doc"))
         elif t.type in (tokenize.INDENT, tokenize.DEDENT, tokenize.NEWLINE):
-            tokens.append((tokenize.tok_name[t.type], t.start[0]))
+            if not (t.type == tokenize.NEWLINE and t.start in ends):
+                tokens.append((tokenize.tok_name[t.type], t.start[0]))
         elif t.type not in (tokenize.NL, tokenize.ENDMARKER):
             tokens.append((t.string, t.start[0]))
     return tokens, comments
