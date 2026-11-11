@@ -40,8 +40,6 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 | Code quality | [comment-sweep](skills/comment-sweep/SKILL.md) |
 | Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
 
-The pull request skills build on each other: **pr-ship** uses **pr-babysit**, which uses **resolve-merge-conflicts**. Install them together.
-
 ## 📦 Install
 
 Start a new session after installing so your agent loads the skills.
