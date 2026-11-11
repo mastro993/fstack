@@ -170,7 +170,7 @@ Say the word and your agent takes the change all the way to the base branch:
 - 🚀 **Open**: commits and pushes the change if needed, then opens the PR from your template, or marks your draft ready.
 - 🍼 **Babysit**: hands failing checks, review threads, and a moving base to [pr-babysit](#pr-babysit).
 - 🤖 **Review rounds**: gets each automated reviewer on the repo (CodeRabbit, Pullfrog, Claude, Copilot, Codex, Bugbot, Greptile, and more) to review the latest push, fixes what they find, and asks again until a round comes back clean. If three rounds of fixes still turn up new findings, it asks you whether to keep going.
-- ✅ **Merge**: squash-merges when the repo allows it (otherwise with the method it allows), pinned to the commit that passed, and only through the repo's rules, never with `--admin`.
+- ✅ **Merge**: squash-merges when the repo allows it (otherwise with the method it allows), pinned to the commit that passed, and only through the repo's rules, never with `--admin`. Asking it to ship is the go-ahead: it merges without checking back with you.
 
 **Needs:** pr-babysit and resolve-merge-conflicts (install all three) and everything they need.
 
