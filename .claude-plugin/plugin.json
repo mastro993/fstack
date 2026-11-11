@@ -15,6 +15,7 @@
     "workflow"
   ],
   "skills": [
+    "./skills/comment-sweep",
     "./skills/feature-design",
     "./skills/pr-babysit",
     "./skills/pr-ship",

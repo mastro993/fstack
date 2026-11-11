@@ -24,6 +24,7 @@
   - [oh-my-pi](#oh-my-pi)
   - [Any other agent](#any-other-agent)
 - [Skills](#-skills)
+  - [comment-sweep](#comment-sweep)
   - [feature-design](#feature-design)
   - [pr-babysit](#pr-babysit)
   - [pr-ship](#pr-ship)
@@ -105,12 +106,30 @@ npx skills add mastro993/fstack --skill pr-babysit --agent cursor -g -y
 
 | Skill | What it does |
 | --- | --- |
+| [**comment-sweep**](skills/comment-sweep/SKILL.md) | Deletes the comments your branch adds that don't earn their place. Your agent keeps the ones tools read and the ones that carry real knowledge, checks warnings against the code's history before touching them, proves only comments changed, and reports what code should change so its comment can go too. |
 | [**feature-design**](skills/feature-design/SKILL.md) | Turns a rough idea into a spec ready to build. Your agent checks the idea against your docs, code, and outside research, tells you what's wrong with it, settles the product decisions in at most three short rounds of questions, makes and explains the technical ones, and records it all as decision records, a glossary, and a spec, then opens issues or starts the build in a fresh session. |
 | [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Your agent fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, tells you when the PR is ready to merge, and keeps watching until it lands. |
 | [**pr-ship**](skills/pr-ship/SKILL.md) | Ships a change. Your agent opens the PR or marks your draft ready, babysits it with pr-babysit, keeps asking the automated reviewers for another pass until one comes back clean, and merges it. |
 | [**resolve-merge-conflicts**](skills/resolve-merge-conflicts/SKILL.md) | Resolves merge and rebase conflicts by what each side meant. Your agent reads the commits, pull requests, issues, and tickets behind both sides, keeps both changes where they fit together, sides with the change you're landing where they can't, runs your checks and the app, and finishes the merge or the whole rebase. |
 | [**ux-brainstorm**](skills/ux-brainstorm/SKILL.md) | Designs a UI with you before anyone builds it. Your agent maps what exists, interviews you about behavior, finds real-world inspiration, and lets you pick between interactive prototypes right in the chat, then hands off a plan that maps every element to your components. |
 | [**ux-stress-test**](skills/ux-stress-test/SKILL.md) | Five first-time-user personas try to reach first success in your web app in a real browser. Your agent ranks the friction they hit, fixes what you choose, and reruns the personas blind to prove the fixes, or opens issues for later. |
+
+### comment-sweep
+
+Your agent asks of every comment whether it says something true that the code can't:
+
+- 🧹 **Delete**: narration, restated signatures, change history ("fixed the bug", "now uses X"), commented-out code, banners, and finished TODOs.
+- 🔒 **Keep**: comments tools read (`eslint-disable`, `@ts-expect-error`, `//go:build`, `# type: ignore`, doctests, licences), public API contracts, and the reasons behind constraints the code can't show, like vendor bugs or protocol rules.
+- 🔎 **Investigate**: warnings, workarounds, and untracked TODOs get checked against the callers and the history (blame, PR, issue) before a verdict. A true warning stays until a test or type enforces it.
+- 🪓 **Reshape targets**: where the code needs a comment to make sense, it names the rename, extraction, type, or test that would make the comment unnecessary, and offers to do it as a separate change.
+- ⚠️ **Mismatches**: a comment that contradicts the code goes, and is reported, since the code may be the bug.
+- ✅ **Proof**: a bundled script compares every file token by token with comments set aside, so a sweep can't change code or drop a suppression by accident; then lint, typecheck, and tests run.
+
+It sweeps only the comments your branch adds or changes, so the diff stays reviewable and the blame on older code stays intact.
+
+**Needs:** python3 and git.
+
+**Try it:** ask your agent to *"clean up the comments in my branch"* or *"strip the AI narration from my changes before I open the PR"*.
 
 ### feature-design
 
