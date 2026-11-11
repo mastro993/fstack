@@ -35,12 +35,17 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 
 Each link opens the skill's definition, which says when it triggers, what it does, and what it needs.
 
-| Area | Skills |
-| --- | --- |
-| Planning | [feature-design](skills/feature-design/SKILL.md) |
-| UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) |
-| Code quality | [comment-sweep](skills/comment-sweep/SKILL.md) |
-| Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
+- **Planning**
+  - [feature-design](skills/feature-design/SKILL.md)
+- **UX**
+  - [ux-brainstorm](skills/ux-brainstorm/SKILL.md)
+  - [ux-stress-test](skills/ux-stress-test/SKILL.md)
+- **Code quality**
+  - [comment-sweep](skills/comment-sweep/SKILL.md)
+- **Pull requests**
+  - [pr-ship](skills/pr-ship/SKILL.md)
+  - [pr-babysit](skills/pr-babysit/SKILL.md)
+  - [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md)
 
 The pull request skills build on each other: **pr-ship** uses **pr-babysit**, which uses **resolve-merge-conflicts**. Install them together.
 
