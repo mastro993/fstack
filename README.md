@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.4.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.5.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -27,6 +27,7 @@
   - [feature-design](#feature-design)
   - [pr-babysit](#pr-babysit)
   - [pr-ship](#pr-ship)
+  - [resolve-merge-conflicts](#resolve-merge-conflicts)
   - [ux-brainstorm](#ux-brainstorm)
   - [ux-stress-test](#ux-stress-test)
 - [License](#-license)
@@ -107,6 +108,7 @@ npx skills add mastro993/fstack --skill pr-babysit --agent cursor -g -y
 | [**feature-design**](skills/feature-design/SKILL.md) | Turns a rough idea into a spec ready to build. Your agent checks the idea against your docs, code, and outside research, tells you what's wrong with it, settles the product decisions in at most three short rounds of questions, makes and explains the technical ones, and records it all as decision records, a glossary, and a spec, then opens issues or starts the build in a fresh session. |
 | [**pr-babysit**](skills/pr-babysit/SKILL.md) | Watches a pull request through CI and review. Your agent fixes failing checks, addresses or answers review comments (bots included), pushes, re-requests review, tells you when the PR is ready to merge, and keeps watching until it lands. |
 | [**pr-ship**](skills/pr-ship/SKILL.md) | Ships a change. Your agent opens the PR or marks your draft ready, babysits it with pr-babysit, keeps asking the automated reviewers for another pass until one comes back clean, and merges it. |
+| [**resolve-merge-conflicts**](skills/resolve-merge-conflicts/SKILL.md) | Resolves merge and rebase conflicts by what each side meant. Your agent reads the commits, pull requests, issues, and tickets behind both sides, keeps both changes where they fit together, sides with the change you're landing where they can't, runs your checks and the app, and finishes the merge or the whole rebase. |
 | [**ux-brainstorm**](skills/ux-brainstorm/SKILL.md) | Designs a UI with you before anyone builds it. Your agent maps what exists, interviews you about behavior, finds real-world inspiration, and lets you pick between interactive prototypes right in the chat, then hands off a plan that maps every element to your components. |
 | [**ux-stress-test**](skills/ux-stress-test/SKILL.md) | Five first-time-user personas try to reach first success in your web app in a real browser. Your agent ranks the friction they hit, fixes what you choose, and reruns the personas blind to prove the fixes, or opens issues for later. |
 
@@ -133,12 +135,12 @@ Your agent waits on GitHub without burning turns and reacts as things happen:
 - 🔴 **Failing check**: reads the failed log once, fixes the root cause, reruns infra flakes once, and stops after two failed attempts.
 - 💬 **Review comment**: fixes what's clear, answers questions from the code, checks bot claims before acting on them, and asks you about design calls or pushback.
 - 🔁 **After a push**: replies on each thread with the fix commit, re-requests review, and leaves resolving threads to the reviewer.
-- 🔀 **Base moved**: when another PR lands and leaves this one conflicting or behind, merges the base in (never rebases or force-pushes), resolves the conflict, and asks you when both sides disagree.
+- 🔀 **Base moved**: when another PR lands and leaves this one conflicting or behind, merges the base in (never rebases or force-pushes) and resolves the conflicts with [resolve-merge-conflicts](#resolve-merge-conflicts).
 - ✅ **Ready**: tells you, then keeps watching until the PR is merged or closed, or you say stop. It never merges unless you asked; landing it is [pr-ship](#pr-ship)'s job.
 
 Ask only to be told ("let me know when CI finishes") and it reports without touching anything.
 
-**Needs:** an authenticated [gh](https://cli.github.com) CLI, git, python3, and a checkout of the PR's branch to push fixes from.
+**Needs:** resolve-merge-conflicts (install both), an authenticated [gh](https://cli.github.com) CLI, git, python3, and a checkout of the PR's branch to push fixes from.
 
 **Try it:** ask your agent to *"babysit PR #42"* or *"watch my PR and fix whatever CI or review throws at it"*.
 
@@ -151,9 +153,24 @@ Say the word and your agent takes the change all the way to the base branch:
 - 🤖 **Review rounds**: gets each automated reviewer on the repo (CodeRabbit, Pullfrog, Claude, Copilot, Codex, Bugbot, Greptile, and more) to review the latest push, fixes what they find, and asks again until a round comes back clean. If three rounds of fixes still turn up new findings, it asks you whether to keep going.
 - ✅ **Merge**: squash-merges when the repo allows it (otherwise with the method it allows), pinned to the commit that passed, and only through the repo's rules, never with `--admin`.
 
-**Needs:** pr-babysit (install both) and everything it needs.
+**Needs:** pr-babysit and resolve-merge-conflicts (install all three) and everything they need.
 
 **Try it:** ask your agent to *"ship it"*, *"get this into main"*, or *"merge #42"*.
+
+### resolve-merge-conflicts
+
+Git shows you where two changes collide; your agent works out why each one was made:
+
+- 🧭 **Start**: merges or rebases the way you asked (otherwise the repo's convention, or a merge for a branch that's already pushed), with the common ancestor shown in every conflict, and leaves a dirty checkout alone by working in a separate worktree.
+- 🔎 **Intent**: for every conflict, reads the commits on both sides, their pull requests and reviews, the issues they close, and any ticket they mention, and writes down what each side meant before editing a line.
+- 🤝 **Resolve**: keeps both changes when they can coexist, adapting one to the other's renames and moves. When they can't, it keeps the change you're landing and tells you what the other side loses. It asks first only if that would drop a security or data-loss fix. It never invents behavior neither side had, and regenerates lockfiles and generated code instead of hand-merging them.
+- ✅ **Check**: runs what your CI runs, which catches the breakage git can't see (one side renamed a function, the other added a call to the old name), and tells a failure it caused apart from one already on the base.
+- 🖥️ **Verify**: runs the app and exercises both sides' behavior when the conflict touched something a user sees.
+- 🏁 **Finish**: commits the merge, or continues the rebase commit by commit until every one is replayed, pushes when the conflict was a PR's, and reports each conflict with both intents and their sources.
+
+**Needs:** git 2.45 or newer, and the [gh](https://cli.github.com) CLI and your issue tracker's CLI or MCP to read why each side changed (optional, but it's where the reasons live).
+
+**Try it:** ask your agent to *"fix the conflicts on PR #42"*, *"rebase my branch onto main"*, or *"merge main into this branch"*.
 
 ### ux-brainstorm
 
