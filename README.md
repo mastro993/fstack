@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.6.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.7.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -35,7 +35,7 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 
 | Area | Skills |
 | --- | --- |
-| Planning | [feature-design](skills/feature-design/SKILL.md) |
+| Planning | [feature-design](skills/feature-design/SKILL.md) · [domain-driven-design](skills/domain-driven-design/SKILL.md) |
 | UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) · [design-system](skills/design-system/SKILL.md) |
 | Code quality | [comment-sweep](skills/comment-sweep/SKILL.md) |
 | Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
@@ -106,6 +106,16 @@ It asks which skills and agents you want, and installs into the current project 
 ```sh
 npx skills add mastro993/fstack --skill pr-babysit --skill resolve-merge-conflicts --agent cursor -g -y
 ```
+
+The skills hand work to each other, so install each one together with every skill it needs, directly or through another skill:
+
+| Skill | Needs |
+| --- | --- |
+| feature-design | domain-driven-design, ux-brainstorm |
+| ux-brainstorm | domain-driven-design |
+| design-system | ux-brainstorm, domain-driven-design |
+| pr-ship | pr-babysit, resolve-merge-conflicts |
+| pr-babysit | resolve-merge-conflicts |
 
 ## 📄 License
 
