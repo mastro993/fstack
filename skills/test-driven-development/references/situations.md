@@ -13,7 +13,7 @@ One regression test per bug, in the unit's existing test file.
 
 ## Untested code
 
-Before changing code without tests (Michael Feathers):
+Before changing code without tests:
 
 - **Characterization tests**: assert what the code does now, even when it looks wrong, for the part the change touches.
 - **Seams**: break a dependency on the clock, database, or network through a parameter, an injected module, or a function argument.
@@ -21,7 +21,7 @@ Before changing code without tests (Michael Feathers):
 
 ## A feature across layers
 
-The double loop (Freeman and Pryce): one failing acceptance test for the main path as a user sees it, then unit cycles for each piece until it goes green. Edge cases live at the unit level only. With nothing running end to end yet, build the walking skeleton first: the thinnest slice that boots and runs one test in CI.
+The double loop: one failing acceptance test for the main path as a user sees it, then unit cycles for each piece until it goes green. Edge cases live at the unit level only. With nothing running end to end yet, build the walking skeleton first: the thinnest slice that boots and runs one test in CI.
 
 ## UI components
 

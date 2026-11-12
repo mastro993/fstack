@@ -6,7 +6,7 @@ compatibility: Needs the project's test runner. The fstack feature-design skill 
 
 # Test-driven development
 
-Change behavior in small, verified steps, as in Kent Beck's *Canon TDD*: a **test list**, then one **red → green → refactor** cycle per item, until your fear about the behavior has turned into boredom.
+Change behavior in small, verified steps: a **test list**, then one **red → green → refactor** cycle per item, until your fear about the behavior has turned into boredom.
 
 - **Red**: one new test, seen failing for the right reason.
 - **Green**: the smallest code change that passes the whole fast suite.

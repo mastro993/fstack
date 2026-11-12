@@ -2,7 +2,7 @@
 
 ## Behavior, not implementation
 
-A new behavior calls for a new test; a new method or class doesn't (Ian Cooper). Test through the public surface of a module (function, hook, component, use case, endpoint) and let private helpers be covered through it. Then the refactor step has a net that holds while structure changes: if renaming a private function or swapping a library breaks a test while users see no change, that test measures the wrong thing.
+A new behavior calls for a new test; a new method or class doesn't. Test through the public surface of a module (function, hook, component, use case, endpoint) and let private helpers be covered through it. Then the refactor step has a net that holds while structure changes: if renaming a private function or swapping a library breaks a test while users see no change, that test measures the wrong thing.
 
 ## Shape
 
