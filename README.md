@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.5.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.6.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -36,7 +36,7 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 | Area | Skills |
 | --- | --- |
 | Planning | [feature-design](skills/feature-design/SKILL.md) |
-| UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) |
+| UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) · [design-system](skills/design-system/SKILL.md) |
 | Code quality | [comment-sweep](skills/comment-sweep/SKILL.md) |
 | Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
 
