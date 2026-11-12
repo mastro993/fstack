@@ -1,7 +1,7 @@
 ---
 name: design-system
 description: Use when the user wants to create, audit, extend, or consolidate a design system, UI kit, or shared component library, or write a DESIGN.md, such as "set up a design system", "our buttons all look different", "we keep rebuilding the same modal", "add a Select to our UI kit", or "clean up our theme tokens".
-compatibility: Works best with a question tool (AskUserQuestion or the harness's equivalent), subagents for the codebase sweep, the fstack ux-brainstorm skill for choosing a visual direction, Node for the DESIGN.md linter, and gh or a tracker MCP for issues.
+compatibility: Needs the ux-brainstorm skill from the same plugin. Works best with a question tool (AskUserQuestion or the harness's equivalent), subagents for the codebase sweep, Node for the DESIGN.md linter, and gh or a tracker MCP for issues.
 ---
 
 # Design system
