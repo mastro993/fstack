@@ -54,7 +54,7 @@ Credential status: `valid`, `expiring` (≤ 30 days left), or `expired`.
 1. Red `valid when expiry is far in the future`; green by Fake It: `return 'valid'`.
 2. Red `expired when expiry is in the past`; green: `expiry <= now ? 'expired' : 'valid'`.
 3. `expired exactly now` passes at once but pins a decision: flip `<=` to `<`, see red, flip back.
-4. Red `expiring when fewer than 30 days remain`; green: a second branch.
+4. Red `expiring when 30 days or fewer remain`; green: a second branch.
 5. Refactor code (a named window constant) and tests, folding the examples into one table:
 
 ```ts
