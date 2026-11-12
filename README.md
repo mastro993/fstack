@@ -107,14 +107,14 @@ It asks which skills and agents you want, and installs into the current project 
 npx skills add mastro993/fstack --skill pr-babysit --skill resolve-merge-conflicts --agent cursor -g -y
 ```
 
-The skills hand work to each other, so install each one together with the skills it calls:
+The skills hand work to each other, so install each one together with every skill it needs, directly or through another skill:
 
-| Skill | Calls |
+| Skill | Needs |
 | --- | --- |
 | feature-design | domain-driven-design, ux-brainstorm |
 | ux-brainstorm | domain-driven-design |
-| design-system | ux-brainstorm |
-| pr-ship | pr-babysit |
+| design-system | ux-brainstorm, domain-driven-design |
+| pr-ship | pr-babysit, resolve-merge-conflicts |
 | pr-babysit | resolve-merge-conflicts |
 
 ## 📄 License

@@ -77,8 +77,6 @@ flowchart LR
 ```md
 # Lending is a separate module that Catalog can't import
 
-Status: accepted
-
 Catalog changes weekly with the new acquisitions workflow, and Lending's rules are what members
 argue about. Keeping them in separate modules, talking through `CopyAdded` events, lets each change
 without retesting the other.
