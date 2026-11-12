@@ -1,7 +1,7 @@
 ---
 name: feature-design
 description: Use when the user has a rough idea for a feature, product change, or new capability and wants to brainstorm, shape, design, or spec it before building, such as "I'm thinking of adding…", "how should we approach…", "help me design…", or "write a spec for…".
-compatibility: Needs the domain-driven-design and ux-brainstorm skills from the same plugin. Works best with a question tool (AskUserQuestion or the harness's equivalent), the Exa MCP for research, a harness that renders HTML or diagrams inline, and an issue tracker CLI or MCP for the handoff.
+compatibility: Needs the domain-driven-design, ux-brainstorm, and test-driven-development skills from the same plugin. Works best with a question tool (AskUserQuestion or the harness's equivalent), the Exa MCP for research, a harness that renders HTML or diagrams inline, and an issue tracker CLI or MCP for the handoff.
 ---
 
 # Feature design
