@@ -31,7 +31,7 @@ Done when `scope` has run on the final scope.
 
 The inventory is one line per comment in scope, `path:line: kind: text`, taken by following `references/inventory.md`. `kind` is `comment`, `doc` (a docstring or doc comment on a declaration), or `directive`: a **load-bearing** comment, one a tool reads.
 
-- **Small**: take it yourself from `batch-1.diff`.
+- **Small**: take it yourself, from `batch-1.diff` in branch scope and from the files `batch-1.files` lists in full scope. Under a few thousand lines a scout costs more than it saves, because judging has you read around every comment anyway.
 - **Big**: send one scout per batch, all in one message so they run in parallel. A scout's whole prompt is the brief with its batch filled in, and it runs on the cheap model `references/models.md` names for your harness. Without subagents, take the batches yourself, one at a time.
 
 Then, while any scouts run, read the repo's own rules on comments: `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, and lint config that requires docs (`jsdoc/require-jsdoc`, `#![deny(missing_docs)]`, revive or golint `exported`, ruff or pydocstyle `D` rules, checkstyle `Javadoc*`, detekt `UndocumentedPublic*`).
@@ -86,7 +86,7 @@ src/orders.ts:31: comment: loop over items => delete: narration
 src/orders.ts:40: comment: Stripe wants minor units: https://docs.stripe.com/currencies => keep: why
 ```
 
-Start the reason with the bold word above that names its case: `check` counts the report by that word. Line numbers and text stay as the inventory took them, from before any edit: the script works from those, and `sweep.py --help` has the rest of its contract.
+Start the reason with the bold word above that names its case, then a comma and any detail: `check` counts the report by the words before the first comma. Line numbers and text stay as the inventory took them, from before any edit: the script works from those, and `sweep.py --help` has the rest of its contract.
 
 Done when every line of `inventory.txt` ends in a verdict.
 
@@ -117,18 +117,24 @@ python3 <skill-dir>/scripts/sweep.py check
 `check` compares the working tree with the snapshot and the inventory, and prints a line per finding:
 
 - `CODE`: a changed line that no delete or trim verdict covers. Revert it when it is code, or a comment outside the inventory. When it is the comment itself and the inventory had its line wrong, correct `inventory.txt` and run `check` again.
-- `DIRECTIVE`: a changed directive. Revert it, unless you removed a suppression on purpose. Then prove it unused with the tool that reads it: `eslint --report-unused-disable-directives`, `tsc` (an unused `@ts-expect-error` fails it), `ruff check --select RUF100`, mypy's `--warn-unused-ignores`, or the linter's equivalent, and give it the verdict `delete: unused directive`. If the tool still needs it, revert.
+- `DIRECTIVE`: a changed directive. Revert it, unless you removed a suppression on purpose. Then prove it unused with the tool that reads it: `eslint --report-unused-disable-directives`, `tsc` (an unused `@ts-expect-error` fails it), `ruff check --select RUF100`, mypy's `--warn-unused-ignores`, or the linter's equivalent, and give it the verdict `delete: unused directive`. If the tool still needs it, or can't run here, revert.
 - `CUT`: an edit `check` couldn't match to the inventory's words, with what went. Read each one: only comment text may be gone.
 - `UNAPPLIED`: finish that edit. `UNJUDGED`, `UNPARSED`, `OUTSIDE`: as in step 4, and revert any edit made to an `OUTSIDE` comment.
 - `STRAY`: a file outside the scope changed. Remove what your own checks left behind (`__pycache__`, build output) and revert anything else.
 
-`check` proves the sweep touched nothing but inventoried comments; whether the program still builds is for the repo's tools. Run its lint and typecheck, and its tests when you changed a docstring or a doc comment with examples in it.
+`check` has read the whole diff, so its findings are all of it you need to read: it proves the sweep touched nothing but inventoried comments. A comment edit can still trip three of the repo's own tools, so run those that apply, once, after the sweep:
 
-Done when `check` ends in `ok` with every `CUT` and `DIRECTIVE` it printed read and sound, and lint, typecheck, and tests pass as they did before the sweep.
+- its linter, when a rule requires docs and you deleted or trimmed a `doc`;
+- the tool that reads a directive you removed;
+- its tests, when you changed a docstring or a doc comment with examples in it.
+
+Run a tool the repo already has set up. One that would need a toolchain or the dependencies installed first is reported as not run, with the command for the user to run: a comment sweep doesn't earn the cost of installing it. A failure on a line the sweep left alone predates it: name it in the report and move on.
+
+Done when `check` ends in `ok` with every `CUT` and `DIRECTIVE` it printed read and sound, and each tool that applies has passed or is reported as not run, with its command.
 
 ## 6. Report
 
-`check` printed the counts, and wrote `after.txt` in the work directory: the inventory with each surviving comment at its line now, and each deleted one at its old line, marked `(before)`. Take every number and location from those two. Use this shape and drop empty sections:
+`check` printed the counts, and then the inventory with each surviving comment at its line now and each deleted one at its old line, marked `(before)`. It computed those lines from the diff, so take every number and location in the report from that output as printed. Use this shape and drop empty sections:
 
 ```
 Comment sweep: <branch> vs <base> (or: full, <paths>), <N> comments in <M> files

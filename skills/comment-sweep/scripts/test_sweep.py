@@ -107,17 +107,16 @@ class SweepTest(unittest.TestCase):
     def test_scope_narrows_to_paths_and_full_takes_every_file(self):
         self.assertIn("small: 1 file, 4 lines", self.scope("web"))
         out = self.scope("--full")
-        self.assertIn("big: 3 files, 19 lines in scope", out)
+        self.assertIn("small: 3 files, 19 lines in scope", out)
         self.assertFalse((self.work / "batch-1.diff").exists())
         self.assertIn("README.md", (self.work / "batch-1.files").read_text())
 
     def test_scope_splits_a_big_branch_into_batches(self):
-        for n in range(25):
+        for n in range(45):
             self.write(f"src/m{n:02}.ts", "export const x = 1;\n" * 100)
         out = self.scope()
-        self.assertIn("big: 27 files, 2518 lines in scope, 2 batches", out)
-        self.assertIn("batch-1: 14 files, 1314 lines", out)
-        self.assertIn("batch-2: 13 files, 1204 lines", out)
+        self.assertIn("big: 47 files, 4518 lines in scope, 4 batches", out)
+        self.assertIn("batch-1: 12 files, 1114 lines", out)
 
     def test_apply_deletes_exact_matches_and_leaves_the_rest(self):
         out = self.swept()
@@ -176,9 +175,8 @@ class SweepTest(unittest.TestCase):
         self.assertIn("  5 delete: narration", out)
         self.assertEqual(out.splitlines()[-1], "ok, once you have read the 2 above")
         self.assertIn("CUT web/page.html:2: was: <main>{# loop over items #}</main> now: <main></main>", out)
-        after = (self.work / "after.txt").read_text()
-        self.assertIn("src/app.ts:6: directive: eslint-disable-line no-undef => keep: directive", after)
-        self.assertIn("src/app.ts:9 (before): comment: call the api => delete: narration", after)
+        self.assertIn("  src/app.ts:6: directive: eslint-disable-line no-undef => keep: directive", out)
+        self.assertIn("  src/app.ts:9 (before): comment: call the api => delete: narration", out)
 
     def test_check_flags_code_directives_and_unfinished_work(self):
         self.swept()

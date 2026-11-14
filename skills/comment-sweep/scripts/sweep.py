@@ -30,7 +30,8 @@ check prints one line per finding and exits 1 if there is any besides CUT:
   UNJUDGED    an entry with no verdict;  UNPARSED  a line that is not an entry
   OUTSIDE     an entry on no line in scope: a comment the branch never touched, or a skipped file
   STRAY       a file outside the scope that changed since scope ran
-then the tally, and after.txt: the inventory with each surviving comment at its line now.
+then the tally (counted by the reason's words before its first comma), and the inventory again with each
+surviving comment at its line now and each deleted one at its old line, marked (before).
 """
 
 import argparse
@@ -51,7 +52,7 @@ LOCK_FILE = re.compile(r"(^|/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun
 MIGRATION_DIR = {"migrations", "migration", "migrate", "db_migrations", "alembic"}
 GENERATED = re.compile(r"@generated|DO NOT EDIT|Code generated|auto-?generated", re.I)
 
-SMALL_LINES, SMALL_FILES = 1000, 20  # a sweep within both is small: one batch, read inline
+SMALL_LINES = 4000  # up to here a sweep is small: one batch, read inline; scouts cost more than they save
 BATCH_LINES, BATCH_FILES = 1500, 20
 
 ENTRY = re.compile(r"^(?P<path>.+?):(?P<start>\d+)(?:-(?P<end>\d+))?: (?P<kind>comment|doc|directive): (?P<rest>.*)$")
@@ -168,7 +169,7 @@ def cmd_scope(args):
             shutil.copy2(root / rel, work / "tree" / rel)
 
     total = sum(files.values())
-    big = args.full or total > SMALL_LINES or len(files) > SMALL_FILES
+    big = total > SMALL_LINES
     wanted = max(-(-len(files) // BATCH_FILES), -(-total // BATCH_LINES)) if big else 1
     loads = {rel: lines / BATCH_LINES + 1 / BATCH_FILES for rel, lines in files.items()}  # a batch fills on either count
     share = sum(loads.values()) / wanted
@@ -459,11 +460,10 @@ def cmd_check(_args):
                             cuts.append(f"CUT {rel}:{i + 1}: was: {show([old[i]])} now: {show([new[j]])}")
             now = sorted(mapping[i] + 1 for i in span if i in mapping)
             spot = where(entry, now[0], now[-1]) if now and entry["verdict"] != "delete" else where(entry) + " (before)"
-            after.append(f"{spot}: {entry['kind']}: {entry['text']} => {entry['verdict']}: {entry['reason']}")
+            after.append(f"{spot}: {entry['kind']}: {show([entry['text']], 70)} => {entry['verdict']}: {entry['reason']}")
 
     strays = set(dirty_paths()) - set(meta["dirty"]) - set(meta["files"])
     problems += [f"STRAY {rel}" for rel in sorted(strays)]
-    (work / "after.txt").write_text("\n".join(after) + "\n")
 
     for row in problems + cuts:
         print(row)
@@ -472,7 +472,9 @@ def cmd_check(_args):
     print(f"{plural(len(entries), 'comment')} in {plural(len(by_file), 'file')}: " + ", ".join(f"{verdicts[v]} {v}" for v in ("delete", "trim", "keep") if verdicts[v]))
     for name, count in sorted(tally.items(), key=lambda item: (("delete", "trim", "keep").index(item[0].split(":")[0]), -item[1])):
         print(f"  {count} {name}")
-    print(f"lines now: {work / 'after.txt'}")
+    print("where each comment is now:")
+    for row in after:
+        print(f"  {row}")
     if problems:
         print(f"FAILED: {len(problems)} to fix" + (f", {len(cuts)} to read" if cuts else ""))
         sys.exit(1)
