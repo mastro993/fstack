@@ -126,6 +126,8 @@ class SweepTest(unittest.TestCase):
 
     def test_scope_with_nothing_in_it(self):
         self.assertIn("small: 0 files, 0 lines in scope, 0 batches", self.scope("--full", "no/such/dir"))
+        code, out = self.sweep("scope", "--full", "..")
+        self.assertEqual((code, out.strip()), (1, f"..: outside the repository at {self.repo}"))
 
     def test_scope_splits_a_big_branch_into_batches(self):
         for n in range(45):

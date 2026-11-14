@@ -132,9 +132,17 @@ def dirty_paths():
     return sorted(paths)
 
 
+def inside(path, root):
+    """The path relative to the repo root, or exit when it lies outside the repo."""
+    try:
+        return str(Path(path).resolve().relative_to(root))
+    except ValueError:
+        sys.exit(f"{path}: outside the repository at {root}")
+
+
 def cmd_scope(args):
     root = repo_root()
-    paths = [str(Path(p).resolve().relative_to(root)) for p in args.paths]  # git runs from the root, whatever the cwd
+    paths = [inside(p, root) for p in args.paths]  # git runs from the root, whatever the cwd
     base = None if args.full else git("-C", str(root), "merge-base", "HEAD", args.base or default_base()).strip()
     untracked = git("-C", str(root), "ls-files", "--others", "--exclude-standard", "--", *paths).splitlines()
     if args.full:
