@@ -35,6 +35,7 @@ surviving comment at its line now and each deleted one at its old line, marked (
 """
 
 import argparse
+import codecs
 import difflib
 import hashlib
 import json
@@ -59,6 +60,7 @@ ENTRY = re.compile(r"^(?P<path>.+?):(?P<start>\d+)(?:-(?P<end>\d+))?: (?P<kind>c
 VERDICT = re.compile(r"^(?P<text>.*) => (?P<verdict>delete|trim|keep): (?P<reason>.*)$")
 NOT_ENTRY = re.compile(r"^(skip: |files: )")
 LINE_OPENERS = ("//", "#", "--", ";", "%")
+CODE_TOO = ("--", ";", "%")  # line openers that are also code punctuation in C-like languages
 MARKED = re.compile(r"""(?<!:)//|/\*|<!--|(?<!\{)\{\#|\{\{!|\"{3}|'{3}|^\s*"?\#(\s|$)|\s\#\s""")  # looks like it holds a comment
 HASH_IS_TEXT = {".md", ".mdx", ".markdown", ".rst", ".txt"}
 BLOCKS = {"{/*": "*/}", "/*": "*/", "<!--": "-->", "{#": "#}", "{{!": "}}"}
@@ -132,6 +134,18 @@ def dirty_paths():
     return sorted(paths)
 
 
+def names(out):
+    return [name for name in out.split("\0") if name]
+
+
+def header_path(row):
+    """The path on a `+++ b/<path>` diff header: git ends one holding a space with a tab, and quotes odd names."""
+    path = row[4:].rstrip("\t")
+    if path.startswith('"'):
+        path = codecs.escape_decode(path[1:-1])[0].decode("utf-8", "surrogateescape")
+    return path.removeprefix("b/")
+
+
 def inside(path, root):
     """The path relative to the repo root, or exit when it lies outside the repo."""
     try:
@@ -144,11 +158,11 @@ def cmd_scope(args):
     root = repo_root()
     paths = [inside(p, root) for p in args.paths]  # git runs from the root, whatever the cwd
     base = None if args.full else git("-C", str(root), "merge-base", "HEAD", args.base or default_base()).strip()
-    untracked = git("-C", str(root), "ls-files", "--others", "--exclude-standard", "--", *paths).splitlines()
+    untracked = names(git("-C", str(root), "ls-files", "-z", "--others", "--exclude-standard", "--", *paths))
     if args.full:
-        tracked = set(git("-C", str(root), "ls-files", "--", *paths).splitlines())
+        tracked = set(names(git("-C", str(root), "ls-files", "-z", "--", *paths)))
     else:
-        tracked = set(git("-C", str(root), "diff", "--name-only", "--diff-filter=d", "--find-renames", base, "--", *paths).splitlines())
+        tracked = set(names(git("-C", str(root), "diff", "-z", "--name-only", "--diff-filter=d", "--find-renames", base, "--", *paths)))
     work = work_dir(root)
     shutil.rmtree(work, ignore_errors=True)
     (work / "tree").mkdir(parents=True)
@@ -159,7 +173,7 @@ def cmd_scope(args):
         path = None
         for row in git(*diff_args, base, "--", *sorted(tracked)).splitlines():
             if row.startswith("+++ "):
-                path = None if row == "+++ /dev/null" else row[6:]
+                path = None if row == "+++ /dev/null" else header_path(row)
             elif row.startswith("@@") and path:
                 start, count = re.match(r"@@ -\S+ \+(\d+)(?:,(\d+))? @@", row).groups()
                 added.setdefault(path, []).append([int(start), int(1 if count is None else count)])
@@ -291,12 +305,32 @@ def is_whole(lines, text):
     return shape and same_words(lines, text)
 
 
+def is_tail(tail, text):
+    """True when the tail is one comment, opener first, holding the entry's words and nothing else.
+
+    A tail cut at code punctuation (`--; /* note */`, `; // note`) starts with an opener that is also
+    code and holds a real comment's opener, so it fails even though its words match."""
+    tail = tail.strip()
+    opener = next((o for o in (*BLOCKS, *LINE_OPENERS) if tail.startswith(o)), None)
+    if opener is None:
+        return False
+    body = tail[len(opener) :]
+    if opener in BLOCKS:
+        if not body.endswith(BLOCKS[opener]):
+            return False
+        body = body[: -len(BLOCKS[opener])]
+    body = body.lstrip(opener[-1] + "!")  # `///`, `//!`, `/**`, `##`, `<!---`
+    if opener in CODE_TOO and any(o in body for o in (*BLOCKS, "//", "#")):
+        return False
+    return same_words([body], text)
+
+
 def tail_start(line, text):
     """Index where a trailing comment with the entry's words starts on a code line, else None."""
-    for opener in (*LINE_OPENERS, *BLOCKS):
+    for opener in (*BLOCKS, *LINE_OPENERS):  # the code-punctuation openers last
         at = line.find(opener)
         while at > 0:
-            if line[:at].strip() and same_words([line[at:]], text):
+            if line[:at].strip() and is_tail(line[at:], text):
                 return at
             at = line.find(opener, at + 1)
     return None
@@ -465,7 +499,7 @@ def cmd_check(_args):
                     for _, i, j in (h for h in hits if h[0] == "mod"):
                         kept = squash(new[j])
                         gone = squash(old[i])[len(kept) :] if squash(old[i]).startswith(kept) else None
-                        if gone is None or not same_words([gone], entry["text"]):
+                        if gone is None or not is_tail(gone, entry["text"]):
                             cuts.append(f"CUT {rel}:{i + 1}: was: {show([old[i]])} now: {show([new[j]])}")
             now = sorted(mapping[i] + 1 for i in span if i in mapping)
             spot = where(entry, now[0], now[-1]) if now and entry["verdict"] != "delete" else where(entry) + " (before)"

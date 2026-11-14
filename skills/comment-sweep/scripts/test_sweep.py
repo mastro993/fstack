@@ -160,6 +160,31 @@ class SweepTest(unittest.TestCase):
         self.assertIn("  return fetch(url);\n", self.read("src/app.ts"))
         self.assertIn(" * Gets the user.\n", self.read("src/app.ts"))
 
+    def test_apply_cuts_a_trailing_comment_at_its_own_marker(self):
+        self.write("src/loop.c", "i--; /* step down */\nprintf(\"x\"); /* say x */\nx = y - 1; // -- note --\n")
+        self.git("add", "-A")
+        self.git("commit", "-qm", "c")
+        out = self.swept(
+            "src/loop.c:1: comment: step down => delete: narration\n"
+            "src/loop.c:2: comment: say x => delete: narration\n"
+            "src/loop.c:3: comment: -- note -- => delete: narration\n"
+        )
+        self.assertIn("applied 3 of 3 deletes", out)
+        self.assertEqual(self.read("src/loop.c"), 'i--;\nprintf("x");\nx = y - 1;\n')
+        self.assertEqual(self.sweep("check")[1].splitlines()[-1], "ok")
+        self.write("src/loop.c", 'i\nprintf("x");\nx = y - 1;\n')  # a cut that took the code's `--;`
+        self.assertIn("CUT src/loop.c:1: was: i--; /* step down */ now: i", self.sweep("check")[1])
+
+    def test_scope_keeps_files_with_spaces_and_quotes_in_their_names(self):
+        self.write("src/my file.py", "# one\n")
+        self.write('src/say "hi".py', "# two\n")
+        self.git("add", "-A")
+        self.git("commit", "-qm", "odd names")
+        out = self.scope()
+        self.assertIn("small: 4 files, 20 lines in scope", out)
+        self.assertIn("+# one", (self.work / "batch-1.diff").read_text())
+        self.assertIn('src/say "hi".py', (self.work / "batch-1.files").read_text())
+
     def test_apply_leaves_what_it_cannot_prove(self):
         self.write("src/app.ts", '"""Docstring."""\n/* a /* nested */ block */\n} // end of loop\n// two\n')
         self.git("commit", "-qam", "more")
