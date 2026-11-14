@@ -88,6 +88,12 @@ class SweepTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.work, True)
         return out
 
+    def scope_in(self, sub, *args):
+        done = subprocess.run([sys.executable, str(SWEEP), "scope", *args], cwd=self.repo / sub, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.addCleanup(shutil.rmtree, Path(done.stdout.splitlines()[0].removeprefix("work: ")), True)
+        return done.stdout
+
     def swept(self, inventory=INVENTORY):
         self.scope()
         (self.work / "inventory.txt").write_text(inventory)
@@ -110,6 +116,16 @@ class SweepTest(unittest.TestCase):
         self.assertIn("small: 3 files, 19 lines in scope", out)
         self.assertFalse((self.work / "batch-1.diff").exists())
         self.assertIn("README.md", (self.work / "batch-1.files").read_text())
+
+    def test_scope_covers_the_whole_repo_from_a_subdirectory(self):
+        self.write("web/notes.txt", "# untracked\n")
+        out = self.scope_in("web", "--full")
+        self.assertIn("small: 4 files, 20 lines in scope", out)  # README.md and src/app.ts too
+        self.assertIn("small: 2 files, 5 lines", self.scope_in("web", "--full", "."))  # a path stays relative to the cwd
+        self.assertIn("small: 3 files, 19 lines", self.scope_in("web"))
+
+    def test_scope_with_nothing_in_it(self):
+        self.assertIn("small: 0 files, 0 lines in scope, 0 batches", self.scope("--full", "no/such/dir"))
 
     def test_scope_splits_a_big_branch_into_batches(self):
         for n in range(45):

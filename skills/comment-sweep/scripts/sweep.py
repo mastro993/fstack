@@ -133,13 +133,14 @@ def dirty_paths():
 
 
 def cmd_scope(args):
-    base = None if args.full else git("merge-base", "HEAD", args.base or default_base()).strip()
-    untracked = git("ls-files", "--others", "--exclude-standard", "--full-name", "--", *args.paths).splitlines()
-    if args.full:
-        tracked = set(git("ls-files", "--full-name", "--", *args.paths).splitlines())
-    else:
-        tracked = set(git("diff", "--name-only", "--diff-filter=d", "--find-renames", base, "--", *args.paths).splitlines())
     root = repo_root()
+    paths = [str(Path(p).resolve().relative_to(root)) for p in args.paths]  # git runs from the root, whatever the cwd
+    base = None if args.full else git("-C", str(root), "merge-base", "HEAD", args.base or default_base()).strip()
+    untracked = git("-C", str(root), "ls-files", "--others", "--exclude-standard", "--", *paths).splitlines()
+    if args.full:
+        tracked = set(git("-C", str(root), "ls-files", "--", *paths).splitlines())
+    else:
+        tracked = set(git("-C", str(root), "diff", "--name-only", "--diff-filter=d", "--find-renames", base, "--", *paths).splitlines())
     work = work_dir(root)
     shutil.rmtree(work, ignore_errors=True)
     (work / "tree").mkdir(parents=True)
