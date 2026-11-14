@@ -3,6 +3,7 @@
 
   pr_watch.py snapshot [PR]   Print the PR's current state and mark everything shown as seen.
   pr_watch.py wait [PR]       Poll until something new needs attention, print it, and exit.
+                              A newer wait on the same PR takes over from an older one.
 
 PR is a number, URL, or branch; it defaults to the current branch's PR. Seen state lives in
 $XDG_CACHE_HOME/pr-babysit (default ~/.cache), keyed by the PR's GitHub node ID, so it is the same
@@ -241,6 +242,7 @@ def cmd_snapshot(pr_arg):
 
 def cmd_wait(pr_arg, interval, timeout):
     deadline, failures = time.monotonic() + timeout, 0
+    me, claimed = str(os.getpid()), False
     while True:
         try:
             pr = fetch(pr_arg)
@@ -251,6 +253,16 @@ def cmd_wait(pr_arg, interval, timeout):
                 print(f"ERROR: giving up after 5 failed polls: {err}")
                 return 1
         else:
+            # One wait per PR: two would each mark events seen, and one would swallow what the
+            # other should report. The newest wait owns the PR; an older one bows out.
+            owner = state_path(pr["key"]).with_suffix(".wait")
+            if not claimed:
+                owner.parent.mkdir(parents=True, exist_ok=True)
+                owner.write_text(me)
+                claimed = True
+            elif owner.read_text() != me:
+                print("SUPERSEDED by a newer wait on this PR. Nothing to do: do not re-arm.")
+                return 0
             state = load_state(pr["key"])
             events, new_threads = new_events(pr, state)
             save_state(pr["key"], state)
