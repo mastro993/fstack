@@ -91,7 +91,7 @@ def load_state(key):
     path = state_path(key)
     if path.exists():
         return json.loads(path.read_text())
-    return {"seen": [], "checks": {}, "passed": [], "conflicts": [], "behind": []}
+    return {"seen": [], "checks": {}, "passed": [], "conflicts": [], "behind": [], "draft": None}
 
 
 def save_state(key, state):
@@ -130,6 +130,9 @@ def new_events(pr, state):
     awaiting = {t["id"] for t in awaiting_reply(pr)}
     if pr["state"] != "OPEN":
         events.append(f"PR {pr['state']}")
+    if state.get("draft") not in (None, pr["isDraft"]):
+        events.append("CONVERTED BACK TO DRAFT" if pr["isDraft"] else "NO LONGER A DRAFT: marked ready for review")
+    state["draft"] = pr["isDraft"]
     for item_id, author, thread_id, line in activity_items(pr):
         if item_id not in seen and author != pr["viewer"]:
             if thread_id in awaiting:
@@ -208,9 +211,11 @@ def summary(pr, new_threads=()):
     if pr["isDraft"]:
         blockers.append("draft")
 
+    # Say "not a draft" outright: a reader who remembers the PR as a draft misses a silent omission.
+    draft = " (draft)" if pr["isDraft"] else " (not a draft)" if pr["state"] == "OPEN" else ""
     lines = [
         f"PR #{pr['number']} {pr['title']} — {pr['url']}",
-        f"state {pr['state']}{' (draft)' if pr['isDraft'] else ''} · head {pr['headRefName']} @ {pr['headRefOid'][:7]} → {pr['baseRefName']}"
+        f"state {pr['state']}{draft} · head {pr['headRefName']} @ {pr['headRefOid'][:7]} → {pr['baseRefName']}"
         f" · mergeable {pr['mergeable']} ({pr['mergeStateStatus']}) · review {pr['reviewDecision'] or 'none required'}"
         + (f" · awaiting review from {', '.join(pending_review)}" if pending_review else ""),
         "checks: " + (", ".join(f"{n} {b}" for b, n in counts.items() if n) or "none"),
