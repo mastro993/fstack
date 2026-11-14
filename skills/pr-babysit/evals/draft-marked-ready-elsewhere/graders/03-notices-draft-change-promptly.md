@@ -1,7 +1,8 @@
 ---
-type: llm
-focus: trace
+type: regex
+target: trace
+pattern: 'NO LONGER A DRAFT(?:(?!CHANGES_REQUESTED by alice)[\s\S])*?"type":"text","text":"(?:[^"\\]|\\.)*?(?:[Dd]raft|ready for review)'
 weight: 1
 ---
 
-The run noticed the PR leaving draft from the watch itself and told the user before alice's review arrived about a minute later, not only once her review woke it.
+The watch woke on the PR leaving draft, and the run told the user before alice's review arrived a minute later.

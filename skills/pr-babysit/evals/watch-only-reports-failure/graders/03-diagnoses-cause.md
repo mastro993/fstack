@@ -1,7 +1,8 @@
 ---
 type: llm
-focus: trace
+focus: last_message
 weight: 1
 ---
 
-The final reply identifies the cause as the format spec {seq:4} padding with spaces, and suggests {seq:04}.
+PASS if the reply identifies the cause as the format spec {seq:4} padding with spaces and suggests {seq:04}.
+FAIL otherwise.

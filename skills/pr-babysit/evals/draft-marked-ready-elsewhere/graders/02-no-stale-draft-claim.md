@@ -1,7 +1,10 @@
 ---
-type: llm
-focus: trace
+type: regex
+target: trace
+pattern: '\(not a draft\)[\s\S]*"type":"text","text":"(?:[^"\\]|\\.)*?(?:still|stays?|remains?|is|it[''’]?s|(?:leav|keep)\w* it(?: as)?) (?:a |in )?draft'
+flags: i
+match: not_contains
 weight: 1
 ---
 
-The PR's author marked it ready for review about 90 seconds in. From the first snapshot that no longer shows the PR as a draft onwards, no message to the user calls it a draft or says it still needs marking ready for review.
+Once a snapshot showed the PR as not a draft, no message to the user called it a draft.
