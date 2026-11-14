@@ -1,6 +1,6 @@
 # Scout models
 
-Scouts only read files and report what they found, so they run on the cheapest fast model your harness offers. Work out which harness you are in from your own subagent tool, then find its row.
+Scouts only read files and list what they find, so they run on the cheapest fast model your harness offers. Tell which harness you are in from your own subagent tool, then use its row.
 
 Last checked 2026-11-14. Model names go stale quickly: to update the map, edit that harness's row, or add a row for a new harness.
 
@@ -18,9 +18,9 @@ Last checked 2026-11-14. Model names go stale quickly: to update the map, edit t
 
 When the row doesn't fit:
 
-- **The tool won't take a model.** Use a built-in agent that already runs on a cheap model. If there isn't one, use the default subagent. It costs more, but it still keeps file dumps out of your context.
+- **The tool won't take a model.** Use a built-in agent that already runs on a cheap model. If there isn't one, use the default subagent: it costs more, and still keeps the files out of your context.
 - **The model in the row isn't offered.** Pick the smallest fast model the harness does list: a Haiku, a mini or nano model, a Flash, or a Luna.
 - **Your harness isn't in the table.** Use the same rules, then add its row.
-- **No subagents at all.** Follow the brief yourself.
+- **No subagents at all.** Take the inventory yourself, batch by batch.
 
-Never pick a model that costs more than the one you are running on.
+Whatever you pick costs at most what your own model does.
