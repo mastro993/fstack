@@ -83,11 +83,15 @@ When the user mixes variants or asks for changes, add the result as a new letter
 
 ## 7. Hand off
 
-Write the handoff into the project, never `RUN`, which may end with the session. Copy the approved prototypes, `decisions.md`, and `references.md` to `OUT`. `OUT` is git-ignored and local to this machine, so every record and issue must stand without it: describe each approved variant in words, add a light-theme screenshot of it (from the preview tool or a headless browser), and mark any `OUT` path as local. Attach the screenshot to each issue that builds that area; to embed it in a decision record, save it beside the record.
+Write the handoff into the project, never `RUN`, which may end with the session. Copy the approved prototypes, `decisions.md`, and `references.md` to `OUT`. `OUT` is git-ignored and local to this machine, so every record and issue must stand without it: describe each approved variant in words, and mark any `OUT` path as local.
 
-Use the project's own format when it has one: decision records that keep the alternatives the user rejected, glossary updates, and issues or tickets as vertical slices with dependency order, `file:line` references, and acceptance checks. Show the issue list, and file it in the tracker only once the user approves. Otherwise write `OUT/spec.md`. Either way, cover:
+The screenshots are what the building session sees of the agreed design. Take them in light theme, from the preview tool or a headless browser: each approved variant at its first state, plus each state that changes the layout (empty, error, an open overlay), named `<area>-<state>.png`. Save them beside the document that embeds them.
 
-- **Decisions and picks**: the decisions and the approved variant per area, in words with its screenshot, plus reference links and the local prototype path.
+When feature-design brought you here, write the handoff into the UX section of the spec it is writing (create the file when it doesn't exist yet), save the screenshots in a folder beside the spec named after it, and return to feature-design: it files the issues and asks how to continue.
+
+Otherwise use the project's own format when it has one: decision records that keep the alternatives the user rejected, glossary updates, and issues or tickets as vertical slices with dependency order, `file:line` references, and acceptance checks. Show the issue list, and file it in the tracker only once the user approves, per [references/issues.md](references/issues.md). Without a project format, write `OUT/spec.md`. Wherever it goes, the handoff covers:
+
+- **Decisions and picks**: the decisions and the approved variant per area, in words with its screenshots, plus reference links and the local prototype path.
 - **States**: each area's states, what triggers them, and what they show.
 - **Component map**: each element → the project component that renders it, or, when none fits, the closest existing pattern to build it from. With no codebase, the platform's standard components.
 - **Tokens**: each color, size, radius, and spacing → the project token, or **new**.
@@ -95,4 +99,4 @@ Use the project's own format when it has one: decision records that keep the alt
 - **Interactions**: what each control does, keyboard and focus order.
 - **Open questions.**
 
-Done when an engineer could build from the handoff alone: each decision is implemented by exactly one issue or spec section (decision records and the glossary may cite it), and every element and string appears in the component map and copy. Reply with the paths or links and a three-line summary, then ask whether to implement it now. On yes, build from the component map. Ask first before creating any new component or icon, when a match is unclear, and, with no codebase, about the stack and where the project lives.
+Done when an engineer could build from the handoff alone: each decision is implemented by exactly one issue or spec section (decision records and the glossary may cite it), every element and string appears in the component map and copy, and every issue that builds an area carries its screenshots and handoff. Outside feature-design, reply with the paths or links and a three-line summary, then ask whether to implement it now. On yes, build from the component map and match the screenshots. Ask first before creating any new component or icon, when a match is unclear, and, with no codebase, about the stack and where the project lives.
