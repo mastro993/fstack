@@ -74,7 +74,7 @@ Each question:
 - an example with realistic data ("Ana offers her Friday shift; Ben sees…"), often enough by itself;
 - a diagram for flows, states, or how parts relate (Mermaid when the harness renders it, otherwise ASCII);
 - side-by-side mockups in the question tool's option previews, when it has them;
-- a small interactive HTML prototype when the choice is about feel or a multi-step flow, rendered inline when the harness can and opened in the browser otherwise. When the whole question is what a screen should look like, hand that part to the ux-brainstorm skill.
+- a small interactive HTML prototype when the choice is about feel or a multi-step flow, rendered inline when the harness can and opened in the browser otherwise. When the whole question is what a screen should look like, hand that part to the ux-brainstorm skill; its handoff, screenshots included, becomes the spec's UX section.
 
 **Sharpen the glossary.** Settle the words that come up per the domain-driven-design skill's [language rules](../domain-driven-design/references/language.md); its questions join this round.
 
@@ -97,7 +97,7 @@ Write everything into the repository, so the next session and the next feature d
 - **Existing docs**: update every page under `docs/` whose description the feature makes wrong.
 - **Spec**, in `docs/specs/<slug>.md`: the numbered decisions, the assumptions, the design with a link to each ADR, the acceptance checks, and the slices in implementation order, each with its own checks and what it depends on.
 
-Done when every numbered decision, assumption, and technical decision is in the spec, every non-trivial one has an ADR, and each acceptance check belongs to a slice.
+Done when every numbered decision, assumption, and technical decision is in the spec, every non-trivial one has an ADR, each acceptance check belongs to a slice, and each UX area ux-brainstorm settled has its handoff and screenshots in the spec and a slice that builds it.
 
 ## 6. Close
 

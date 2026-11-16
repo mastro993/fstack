@@ -23,7 +23,9 @@ The numbered decisions as rules, then each flow step by step: what the user does
 and every state (first use, empty, loading, error, limits). Edge cases with the agreed result.
 
 ## UX
-Screens or surfaces touched, with the mockup, diagram, or prototype path that settled each choice.
+Screens or surfaces touched, with the mockup or diagram that settled each choice. For each area
+ux-brainstorm settled, its whole handoff, with the screenshots saved in `docs/specs/<slug>/` and
+embedded here.
 
 ## Design
 How it is built, in plain words, with a diagram of the parts. Data that is added or changed,
@@ -36,8 +38,8 @@ What was decided without asking, and what would change if it is wrong.
 Checks that prove the feature works, written so a test or a person can run them.
 
 ## Slices
-In implementation order. Each: what it delivers end to end, its acceptance checks, and what it
-depends on.
+In implementation order. Each: what it delivers end to end, the UX areas it builds, its acceptance
+checks, and what it depends on.
 
 ## Open questions
 Ideally none. Anything here blocks the slice that needs it.
@@ -51,6 +53,10 @@ Use the glossary's terms throughout, and link ADRs instead of repeating their re
 ## What
 The slice, in two or three sentences, in the glossary's terms.
 
+## UI
+![Swap dialog, Default](./swap-dialog-default.png)
+The area's handoff, copied from the spec's UX section.
+
 ## Acceptance
 - [ ] …
 
@@ -59,4 +65,4 @@ Spec: docs/specs/<slug>.md#slices · ADRs: 0003, 0004
 Blocked by: #12
 ```
 
-Title each issue with the outcome ("Staff can propose a swap to a colleague"), not the layer.
+Title each issue with the outcome ("Staff can propose a swap to a colleague"), not the layer. The `## UI` section is for a slice that builds a UX area; fill it per ux-brainstorm's [issues.md](../../ux-brainstorm/references/issues.md).

@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: issues-carry-ui-handoff
+expected_outcome: |
+  The spec is approved and the user chose issues. Slice 3 builds the Renew confirm page, which the
+  spec's UX section settled with ux-brainstorm: an approved variant, two screenshots in
+  docs/specs/email-renewals/, states, component map, tokens, copy, and interactions. The run opens
+  one issue per slice; the slice 3 issue uploads both screenshots with `gh issue create --attach`
+  and embeds them, copies the confirm page's handoff into a UI section, and has an acceptance check
+  that the page matches the screenshots. Issues for slices that build no UX area carry no
+  screenshots. No issue body is left pointing at a local image path.
+context:
+  scaffold_script: place-files.sh

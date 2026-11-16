@@ -4,6 +4,7 @@
 Issues live in .gh-stub/issues.json; every call is appended to .gh-stub/calls.log for grading.
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -29,6 +30,22 @@ def body():
     return flag("--body", "-b") or ""
 
 
+def attach(text):
+    """Upload each --attach file and point its reference in the body at the upload, as gh does."""
+    body_file = flag("--body-file", "-F")
+    bases = [Path(body_file).parent, Path(".")] if body_file and body_file != "-" else [Path(".")]
+    for n, spec in enumerate(flag("--attach", many=True)):
+        file, _, alt = spec.partition("#")
+        if not Path(file).is_file():
+            sys.exit(f"failed to attach {file}: no such file")
+        url = f"https://github.com/user-attachments/assets/stub-{len(issues) + 12}-{n}"
+        same = lambda ref: any((b / ref).resolve() == Path(file).resolve() for b in bases)
+        text = re.sub(r"(!\[[^\]]*\]\()([^)\s]+)(\))", lambda m: m[1] + url + m[3] if same(m[2]) else m[0], text)
+        if url not in text:
+            text += f"\n\n![{alt or Path(file).name}]({url})"
+    return text
+
+
 def find(number):
     return next(i for i in issues if str(i["number"]) == number.lstrip("#").rsplit("/", 1)[-1])
 
@@ -38,7 +55,11 @@ def save():
 
 
 cmd = args[:2]
-if cmd == ["auth", "status"]:
+if cmd == ["issue", "create"] and "--help" in args:
+    print("Create an issue on GitHub.\n\nFLAGS\n      --attach file          Attach an image or video file, in '<file>#<image alt text>' format\n"
+          "  -b, --body string          Supply a body\n  -F, --body-file file       Read body text from file\n"
+          "  -l, --label name           Add labels by name\n  -t, --title string         Supply a title")
+elif cmd == ["auth", "status"]:
     print("github.com\n  ✓ Logged in to github.com account millbrook-volunteer")
 elif cmd == ["repo", "view"]:
     print(json.dumps({"nameWithOwner": REPO, "hasIssuesEnabled": True, "url": f"https://github.com/{REPO}"}))
@@ -51,7 +72,7 @@ elif cmd == ["issue", "list"]:
         for i in issues:
             print(f"{i['number']}\tOPEN\t{i['title']}\t{','.join(i['labels'])}")
 elif cmd == ["issue", "create"]:
-    issue = {"number": len(issues) + 12, "title": flag("--title", "-t"), "body": body(), "labels": flag("--label", "-l", many=True), "state": "OPEN"}
+    issue = {"number": len(issues) + 12, "title": flag("--title", "-t"), "body": attach(body()), "labels": flag("--label", "-l", many=True), "state": "OPEN"}
     issue["url"] = f"https://github.com/{REPO}/issues/{issue['number']}"
     issues.append(issue)
     save()
