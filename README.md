@@ -19,12 +19,6 @@
 - [What it is](#-what-it-is)
 - [Skills](#-skills)
 - [Install](#-install)
-  - [Claude Code](#claude-code)
-  - [GitHub Copilot](#github-copilot)
-  - [Codex](#codex)
-  - [Pi](#pi)
-  - [oh-my-pi](#oh-my-pi)
-  - [Any other agent](#any-other-agent)
 - [License](#-license)
 
 ## 🥞 What it is
@@ -43,7 +37,8 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 
 ## 📦 Install
 
-### Claude Code
+<details>
+<summary><b>Claude Code</b></summary>
 
 ```
 /plugin install fstack --marketplace mastro993/fstack
@@ -59,7 +54,10 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 
 </details>
 
-### GitHub Copilot
+</details>
+
+<details>
+<summary><b>GitHub Copilot</b></summary>
 
 In Copilot CLI:
 
@@ -70,14 +68,57 @@ copilot plugin install fstack@fedemas
 
 In VS Code, turn on the `chat.plugins.enabled` setting. VS Code then loads plugins installed with Copilot CLI; without the CLI, run **Chat: Install Plugin from Source** and enter `https://github.com/mastro993/fstack`.
 
-### Codex
+</details>
+
+<details>
+<summary><b>Codex</b></summary>
 
 ```sh
 codex plugin marketplace add mastro993/fstack
 codex plugin add fstack@fedemas
 ```
 
-### Pi
+</details>
+
+<details>
+<summary><b>Gemini CLI</b></summary>
+
+```sh
+gemini extensions install https://github.com/mastro993/fstack
+```
+
+Run `gemini extensions update fstack` to pull new versions, or add `--auto-update` when you install.
+
+</details>
+
+<details>
+<summary><b>Qwen Code</b></summary>
+
+```sh
+qwen extensions install mastro993/fstack
+```
+
+</details>
+
+<details>
+<summary><b>Factory Droid</b></summary>
+
+```sh
+droid plugin marketplace add mastro993/fstack
+droid plugin install fstack@fedemas --scope user
+```
+
+</details>
+
+<details>
+<summary><b>Kiro</b></summary>
+
+In the Powers panel, choose **Add Custom Power**, then **Import power from GitHub**, and enter `https://github.com/mastro993/fstack`.
+
+</details>
+
+<details>
+<summary><b>Pi</b></summary>
 
 ```sh
 pi install git:github.com/mastro993/fstack
@@ -85,7 +126,10 @@ pi install git:github.com/mastro993/fstack
 
 Add `-l` to install for the current project only. Pi ships without subagents, which **ux-stress-test** needs, so add a subagent package from the [Pi package gallery](https://pi.dev/packages) before you run it.
 
-### oh-my-pi
+</details>
+
+<details>
+<summary><b>oh-my-pi</b></summary>
 
 ```sh
 omp plugin marketplace add mastro993/fstack
@@ -94,9 +138,12 @@ omp plugin install fstack@fedemas
 
 Add `--scope project` to install for the current project only.
 
-### Any other agent
+</details>
 
-The [skills CLI](https://github.com/vercel-labs/skills) installs the skills into Cursor, OpenCode, Gemini CLI, Windsurf, and [many more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md):
+<details>
+<summary><b>Any other agent</b></summary>
+
+The [skills CLI](https://github.com/vercel-labs/skills) installs the skills into Cursor, OpenCode, Windsurf, and [many more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md):
 
 ```sh
 npx skills add mastro993/fstack
@@ -117,6 +164,8 @@ The skills hand work to each other, so install each one together with every skil
 | design-system | ux-brainstorm, domain-driven-design, pr-babysit, resolve-merge-conflicts |
 | pr-ship | pr-babysit, resolve-merge-conflicts |
 | pr-babysit | resolve-merge-conflicts |
+
+</details>
 
 ## 📄 License
 

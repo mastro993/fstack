@@ -1,0 +1,26 @@
+name: Manifests
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  versions-match:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check every manifest and the README badge carry the same version
+        run: |
+          versions=$(
+            {
+              jq -r .version .claude-plugin/plugin.json plugin.json gemini-extension.json
+              grep -o 'badge/version-[^-]*' README.md | cut -d- -f2
+            } | sort -u
+          )
+          echo "$versions"
+          [ "$(echo "$versions" | wc -l)" -eq 1 ]

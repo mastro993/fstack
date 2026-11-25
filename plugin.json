@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "fstack",
+  "version": "0.9.0",
+  "description": "Federico Mastrini's agent skills for everyday software engineering work.",
+  "author": {
+    "name": "Federico Mastrini",
+    "url": "https://fedemas.dev"
+  },
+  "homepage": "https://www.fedemas.dev/fstack",
+  "repository": "https://github.com/mastro993/fstack",
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "skills",
+    "workflow"
+  ]
+}
