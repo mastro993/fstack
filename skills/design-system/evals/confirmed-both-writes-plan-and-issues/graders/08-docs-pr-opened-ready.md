@@ -1,7 +1,7 @@
 ---
 type: regex
 target: { source: file, path: .gh-stub/state.json }
-pattern: '"pulls": \[\s*\{[^\]]*"isDraft": false'
+pattern: '^(?![\s\S]*"isDraft": true)[\s\S]*"isDraft": false'
 weight: 1
 ---
 
