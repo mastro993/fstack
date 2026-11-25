@@ -6,13 +6,9 @@ expected_outcome: |
   and leaves theme.css unchanged. It writes acme-dash/docs/design-system/plan.md with the catalog
   (every component with its tier), the opportunities with their call sites, the README outline, the
   declined rename recorded as declined, and the five slices in order with acceptance checks and
-  dependencies, and commits it with DESIGN.md on a branch. Before any issue exists, it pushes that
-  branch, opens a pull request for it (draft or ready, as the user's own instructions say), tells
-  the user the issues wait for its merge, and watches it without merging it; the sandbox's
-  maintainer merges it on a later read. Then it updates main and opens one issue per slice on
-  acme/acme-dash with gh, module and tokens first and Button before ConfirmDialog, each naming its
-  blockers by number and linking the plan at the merge commit, by full SHA (blob/<sha>/...). It
-  replies with the issue links and the build order, asks whether to start building in a new session,
-  and changes nothing under acme-dash/src.
+  dependencies, and commits it with DESIGN.md on a branch. Then it hands the plan to the create-issues
+  skill, which shows an issue plan in build order (module and tokens first, Button before
+  ConfirmDialog), each issue with its blockers and split trigger, files nothing yet, and asks whether
+  to file it. Nothing under acme-dash/src changes.
 context:
   scaffold_script: place-files.sh

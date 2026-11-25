@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: small-contract-stays-one-issue
+expected_outcome: |
+  The overdue-report spec is small: a CSV of overdue loans written by a new script, sorted, with an
+  empty case, which the nightly job also emails to the duty librarian. It looks splittable into
+  "report generator", "CSV formatting" and "email attachment", but those are layers: the whole change
+  is about 150-250 non-test lines over a few files in one deployable, so it is tier S (or XS) and no
+  split trigger fires. The run numbers the five requirements, plans exactly one issue with no parent
+  and no sub-issues, says no trigger fires, maps every requirement to that issue, files nothing, and
+  asks whether to file it.
+context:
+  scaffold_script: place-files.sh

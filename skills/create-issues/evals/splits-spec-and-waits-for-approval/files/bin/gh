@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+"""Stub gh CLI for create-issues evals: issues, issue relationships and pull requests for millbrook/readwell.
+
+`git push` to origin lands in ./remote/readwell.git (see place-files.sh). A pull request is merged by
+a simulated maintainer on the second time its state is read after it was opened: its head is merged
+into the base in that remote and the head branch deleted, as GitHub does.
+Issues take native blocked-by and parent links (gh 2.94+ flags, or the REST endpoints, which take the
+blocker's database id: number + 1000 here). State lives in .gh-stub/state.json (place-files.sh may seed it); every call is appended to .gh-stub/calls.log for grading.
+"""
+import json
+import subprocess
+import sys
+import zlib
+from pathlib import Path
+
+SANDBOX = Path(__file__).resolve().parent.parent
+ROOT = SANDBOX / ".gh-stub"
+ROOT.mkdir(exist_ok=True)
+STORE = ROOT / "state.json"
+REMOTE = SANDBOX / "remote" / "readwell.git"
+REPO = "millbrook/readwell"
+URL = f"https://github.com/{REPO}"
+args = sys.argv[1:]
+with (ROOT / "calls.log").open("a") as log:
+    log.write(json.dumps(args) + "\n")
+state = json.loads(STORE.read_text()) if STORE.exists() else {"issues": [], "pulls": [], "next": 12}
+
+
+def flag(*names, many=False):
+    found = [args[i + 1] for i, a in enumerate(args[:-1]) if a in names]
+    return found if many else (found[-1] if found else None)
+
+
+def refs(*names):
+    found = []
+    for value in flag(*names, many=True):
+        found += [int(v.strip().lstrip("#").rstrip("/").rsplit("/", 1)[-1]) for v in value.split(",") if v.strip()]
+    return found
+
+
+def issue_by_id(db_id):
+    return next(i for i in state["issues"] if i["number"] + 1000 == int(db_id))
+
+
+def fields(issue):
+    data = dict(issue, id=issue["number"] + 1000)
+    wanted = flag("--json")
+    return {k: v for k, v in data.items() if k in wanted.split(",")} if wanted else data
+
+
+def body():
+    path = flag("--body-file", "-F")
+    if path:
+        return sys.stdin.read() if path == "-" else Path(path).read_text()
+    return flag("--body", "-b") or ""
+
+
+def git(*cmd):
+    return subprocess.run(["git", f"--git-dir={REMOTE}", *cmd], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def save():
+    STORE.write_text(json.dumps(state, indent=2))
+
+
+def output(data):
+    text = json.dumps(data)
+    jq = flag("--jq", "-q")
+    if jq:
+        text = subprocess.run(["jq", "-r", jq], input=text, capture_output=True, text=True).stdout.rstrip("\n")
+    print(text)
+
+
+def pick(items, ref):
+    number = (ref or "").lstrip("#").rstrip("/").rsplit("/", 1)[-1]
+    found = next((i for i in items if i.get("headRefName") == ref or str(i["number"]) == number), None)
+    if not found:
+        sys.exit(f"no pull requests or issues found for {ref!r}")
+    return found
+
+
+def current_branch():
+    try:
+        return subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
+def read_pr(ref):
+    pr = pick(state["pulls"], ref or current_branch())
+    pr["reads"] += 1
+    if pr["state"] == "OPEN" and pr["reads"] >= 2:
+        merge(pr, by="maintainer")
+    return pr
+
+
+def merge(pr, by):
+    head = git("rev-parse", f"refs/heads/{pr['headRefName']}")
+    base = git("rev-parse", f"refs/heads/{pr['baseRefName']}")
+    commit = git("commit-tree", f"{head}^{{tree}}", "-p", base, "-p", head, "-m", f"Merge pull request #{pr['number']}")
+    git("update-ref", f"refs/heads/{pr['baseRefName']}", commit)
+    git("update-ref", "-d", f"refs/heads/{pr['headRefName']}")
+    pr.update(state="MERGED", mergedBy=by, mergeCommit={"oid": commit})
+
+
+def pr_json(pr):
+    fields = dict(pr, id=f"PR_{zlib.crc32(str(SANDBOX).encode())}_{pr['number']}", isDraft=pr["isDraft"], mergeable="MERGEABLE",
+                  mergeStateStatus="CLEAN", reviewDecision="", reviewRequests=[], headRefOid="", statusCheckRollup=[])
+    wanted = flag("--json")
+    return {k: v for k, v in fields.items() if k in wanted.split(",")} if wanted else fields
+
+
+cmd = args[:2]
+if "--help" in args or "-h" in args:
+    print(f"gh stub: usage for `gh {' '.join(a for a in args if not a.startswith('-'))}` is not available in this sandbox")
+elif args[:1] in (["--version"], ["version"]):
+    print("gh version 2.103.3 (2026-10-26)")
+elif cmd == ["auth", "status"]:
+    print("github.com\n  ✓ Logged in to github.com account millbrook-volunteer")
+elif cmd == ["repo", "view"]:
+    output({"nameWithOwner": REPO, "hasIssuesEnabled": True, "url": URL, "defaultBranchRef": {"name": "main"}})
+elif cmd == ["label", "list"]:
+    print("enhancement\tNew feature or request\t#a2eeef\nbug\tSomething isn't working\t#d73a4a")
+elif cmd == ["issue", "list"]:
+    if "--json" in args:
+        output([fields(i) for i in state["issues"]])
+    else:
+        for i in state["issues"]:
+            print(f"{i['number']}\tOPEN\t{i['title']}\t{','.join(i['labels'])}")
+elif cmd == ["issue", "create"]:
+    merged = any(p["state"] == "MERGED" for p in state["pulls"])
+    issue = {"number": state["next"], "title": flag("--title", "-t"), "body": body(), "labels": flag("--label", "-l", many=True),
+             "state": "OPEN", "created_after_docs_merged": merged,
+             "blockedBy": refs("--blocked-by"), "parent": (refs("--parent") or [None])[0], "comments": []}
+    for n in refs("--blocking"):
+        pick(state["issues"], str(n))["blockedBy"].append(state["next"])
+    issue["url"] = f"{URL}/issues/{issue['number']}"
+    state["next"] += 1
+    state["issues"].append(issue)
+    save()
+    print(issue["url"])
+elif cmd == ["issue", "view"]:
+    issue = pick(state["issues"], args[2])
+    if "--json" in args:
+        output(fields(issue))
+    else:
+        print(f"#{issue['number']} {issue['title']}\n\n{issue['body']}")
+elif cmd == ["issue", "edit"]:
+    issue = pick(state["issues"], args[2])
+    if flag("--title", "-t"):
+        issue["title"] = flag("--title", "-t")
+    if flag("--body", "-b", "--body-file", "-F"):
+        issue["body"] = body()
+    issue["labels"] += flag("--add-label", many=True)
+    issue["blockedBy"] += refs("--add-blocked-by")
+    for n in refs("--add-sub-issue"):
+        pick(state["issues"], str(n))["parent"] = issue["number"]
+    if refs("--parent"):
+        issue["parent"] = refs("--parent")[0]
+    save()
+    print(issue["url"])
+elif cmd == ["issue", "comment"]:
+    issue = pick(state["issues"], args[2])
+    issue["comments"].append(body())
+    save()
+    print(f"{issue['url']}#issuecomment-1")
+elif cmd == ["pr", "create"]:
+    head = flag("--head", "-H") or current_branch()
+    try:
+        git("rev-parse", f"refs/heads/{head}")
+    except subprocess.CalledProcessError:
+        sys.exit(f"aborted: you must first push the current branch to a remote, or use the --head flag")
+    pr = {"number": state["next"], "title": flag("--title", "-t"), "body": body(), "headRefName": head,
+          "baseRefName": flag("--base", "-B") or "main", "isDraft": "--draft" in args or "-d" in args, "state": "OPEN", "reads": 0}
+    pr["url"] = f"{URL}/pull/{pr['number']}"
+    state["next"] += 1
+    state["pulls"].append(pr)
+    save()
+    print(pr["url"])
+elif cmd == ["pr", "view"]:
+    ref = args[2] if len(args) > 2 and not args[2].startswith("-") else None
+    pr = read_pr(ref)
+    save()
+    if "--json" in args:
+        output(pr_json(pr))
+    else:
+        print(f"{pr['title']} #{pr['number']}\n{pr['state']}\n\n{pr['body']}\n\nView this pull request on GitHub: {pr['url']}")
+elif cmd == ["pr", "list"]:
+    output([pr_json(p) for p in state["pulls"]])
+elif cmd == ["pr", "checks"]:
+    print("[]" if "--json" in args else "no checks reported on the branch")
+elif cmd == ["pr", "ready"]:
+    pick(state["pulls"], args[2] if len(args) > 2 else current_branch())["isDraft"] = False
+    save()
+elif cmd == ["pr", "merge"]:
+    pr = pick(state["pulls"], args[2] if len(args) > 2 and not args[2].startswith("-") else current_branch())
+    merge(pr, by="agent")
+    save()
+    print(f"✓ Merged pull request #{pr['number']}")
+elif args[:1] == ["api"] and args[1] != "graphql":
+    path = next(a for a in args[1:] if not a.startswith("-") and a.startswith(("repos/", "/repos/"))).lstrip("/")
+    parts = path.split("/")
+    issue = pick(state["issues"], parts[4]) if len(parts) > 4 and parts[3] == "issues" else None
+    posted = any(a in ("POST", "-XPOST") for a in args) or any(a.startswith(("issue_id=", "sub_issue_id=")) for a in args)
+    value = lambda key: next(a.split("=", 1)[1] for a in args if a.startswith(key + "="))
+    if issue and path.endswith("dependencies/blocked_by") and posted:
+        issue["blockedBy"].append(issue_by_id(value("issue_id"))["number"])
+        save()
+        output(fields(issue))
+    elif issue and path.endswith("dependencies/blocked_by"):
+        output([fields(pick(state["issues"], str(n))) for n in issue["blockedBy"]])
+    elif issue and path.endswith("sub_issues") and posted:
+        issue_by_id(value("sub_issue_id"))["parent"] = issue["number"]
+        save()
+        output(fields(issue))
+    elif issue and len(parts) == 5:
+        output(fields(issue))
+    else:
+        sys.exit(f"gh stub: `gh api {path}` is not available in this sandbox")
+elif cmd == ["api", "graphql"]:
+    print(json.dumps({"data": {"viewer": {"login": "millbrook-volunteer"}, "repository": {"pullRequest": {
+        "reviewThreads": {"nodes": []}, "reviews": {"nodes": []}, "comments": {"nodes": []}}}}}))
+else:
+    sys.exit(f"gh stub: `gh {' '.join(args[:2])}` is not available in this sandbox (issues, issue relationships and pull requests only)")

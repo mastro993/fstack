@@ -1,7 +1,7 @@
 ---
 name: ux-brainstorm
 description: Use when the user wants to brainstorm, explore, mock up, or prototype a UI or UX before building it, such as a new screen, flow, or component, a redesign, or "what should this look like?".
-compatibility: Needs the domain-driven-design and pr-babysit skills from the same plugin. Works best with the Mobbin MCP, subagents, and a harness that renders HTML inline in the chat (T3 Code's html_render); otherwise opens the prototypes in the browser.
+compatibility: Needs the domain-driven-design and create-issues skills from the same plugin. Works best with the Mobbin MCP, subagents, and a harness that renders HTML inline in the chat (T3 Code's html_render); otherwise opens the prototypes in the browser.
 ---
 
 # UX brainstorm
@@ -95,6 +95,6 @@ Use the project's own format when it has one: decision records that keep the alt
 - **Interactions**: what each control does, keyboard and focus order.
 - **Open questions.**
 
-When the handoff has issues, find the tracker first (the git remote with `gh`, or a tracker MCP); with none reachable, say so and keep the slices in the records. Show the issue list, and file it only once the user approves. Issues outlive branches, so when they link records or glossary written into the project, land those first, after the approval: commit them on a branch, open a pull request for it the way the user and the repo open theirs (draft or ready for review, the PR template), and tell the user in a line, with the link, that the issues wait for its merge, and, for a draft, on them marking it ready. Run the pr-babysit skill on it, merging only if the user asked; once it merges, update the local default branch and file the issues with every link at that commit's full SHA (`blob/<sha>/<path>`), so even an old issue shows the records as they were. If it closes unmerged, ask the user how to go on. A handoff that lives only in `OUT` has nothing to land or link.
+When the handoff has issues, load the create-issues skill and follow it. The contract is the decision records, the glossary, and the approved variants; the slices are a proposed split. A handoff that lives only in `OUT` has nothing to land or link.
 
 Done when an engineer could build from the handoff alone: each decision is implemented by exactly one issue or spec section (decision records and the glossary may cite it), and every element and string appears in the component map and copy. Reply with the paths or links and a three-line summary, then ask whether to implement it now. On yes, build from the component map. Ask first before creating any new component or icon, when a match is unclear, and, with no codebase, about the stack and where the project lives.
