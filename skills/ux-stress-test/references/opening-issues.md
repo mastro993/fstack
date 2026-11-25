@@ -1,6 +1,6 @@
 # Opening issues
 
-Load the create-issues skill and follow it. The contract is the rows marked **open issue** in `issues.md`, one issue per `UX-NN` since each is one root cause, and the user's choice in step 4 is the confirmation that skill asks for. With no tracker reachable, write `RUN/issues/UX-NN.md` per issue instead and say so.
+Load the create-issues skill and follow it once per row marked **open issue** in `issues.md`. Each `UX-NN` is its own contract and one root cause, so it gets one issue: no parent, no tiering or matrix across the rows. The user picked these rows from the ranked table in step 4, so that choice is the approval of exact issues create-issues' step 5 accepts; don't ask again. With no tracker reachable, write `RUN/issues/UX-NN.md` per issue instead and say so.
 
 Write each issue for a developer who never saw this run:
 
