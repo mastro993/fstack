@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: xl-contract-stops-and-proposes-cuts
+expected_outcome: |
+  The readwell 2.0 spec mixes five features that each ship and make sense alone: member accounts,
+  a teacher-priority holds queue, a librarian statistics page, inter-library loans with Ashford, and
+  a move from SQLite to Postgres. Filing it would take well over ten issues, so it is tier XL. The
+  run files nothing and replies that the contract should first be split into separate contracts,
+  proposing the cut lines (one contract per feature, or close to it) and the order or dependencies
+  between them (for example the Postgres move or member accounts before the features that need
+  them).
+context:
+  scaffold_script: place-files.sh

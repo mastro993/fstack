@@ -44,19 +44,3 @@ Ideally none. Anything here blocks the slice that needs it.
 ```
 
 Use the glossary's terms throughout, and link ADRs instead of repeating their reasoning.
-
-## Issue
-
-```md
-## What
-The slice, in two or three sentences, in the glossary's terms.
-
-## Acceptance
-- [ ] …
-
-## Context
-Spec: docs/specs/<slug>.md#slices · ADRs: 0003, 0004
-Blocked by: #12
-```
-
-Title each issue with the outcome ("Staff can propose a swap to a colleague"), not the layer.

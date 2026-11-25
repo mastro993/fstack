@@ -16,15 +16,7 @@ Done when the plan holds the catalog with a tier for every component, every oppo
 
 ## Issues
 
-Issues outlive branches: a link to the spec branch dies once it merges and is deleted, and a link to the default branch drifts as the docs change. So the spec and plan land on the default branch first, and each issue links them at a fixed commit there, which shows them exactly as they were when the issue was written.
-
-1. **Find the tracker** from the project: the git remote with `gh`, or a tracker MCP. With none reachable, say so, keep the slices in the plan (write it when the user picked Issues alone), and stop here.
-2. **Land the docs.** Skip to step 3 when the spec and plan are already on the remote's default branch. Otherwise push the branch that holds them and open a pull request for it the way the user and the repo open theirs (draft or ready for review, the PR template), and say in its body that the issues follow its merge. Tell the user in a line, with the link, that the issues wait for the merge, and, for a draft, that it waits on them to mark it ready. Then load the pr-babysit skill and run it on that PR; merge it only if the user asked. When it reports the PR merged, continue here. If the PR closes unmerged, or the push fails, ask the user how to go on.
-3. **Read the docs as merged**: update the local default branch and build the issues from it, since review may have changed the plan. Link every file at the default branch's head commit, by its full SHA (`git rev-parse origin/<default-branch>`): `https://github.com/<owner>/<repo>/blob/<sha>/<path>`, or the tracker's equivalent.
-4. **Create one issue per slice**, in build order (tokens, then atoms, molecules, organisms), so each issue names its blockers by number. Use the issue format of [formats.md](formats.md#issue), the tracker's own dependency or sub-issue links when it has them, and the project's labels. Where an issue for a slice already exists, update it to these links instead of opening another.
-5. **Reply** with the issue links and the build order: what comes first, what can run in parallel, and why.
-
-Done when the docs are on the default branch, every slice has an issue whose links name a commit on it, every blocker is named by number, and the user has the order.
+Load the create-issues skill and follow it. The contract is `DESIGN.md` and the plan, or the confirmed system when the user picked Issues alone; its slices are a proposed split, in build order (tokens, then atoms, molecules, organisms). Each issue also carries the components and call sites of [formats.md](formats.md#issue). Done when that skill hands back.
 
 ## Building in a new session
 

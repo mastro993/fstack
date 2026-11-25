@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: agreed-bug-updates-existing-issue
+expected_outcome: |
+  The user agreed the root cause and fix of a bug and asked for one issue. The tracker already has
+  #12, a volunteer's report of the same symptom ("some members never got the second overdue email
+  in late March") with no root cause. The run finds it and updates #12 (edits its body or comments
+  on it) with the root cause, high-level fix guidance (count calendar days in Europe/London, in
+  src/reminders.js) and acceptance checks including the clock-change test, instead of opening a
+  duplicate. It adds nothing beyond what was agreed, opens no pull request since there is nothing to
+  land, and replies with the link to #12.
+context:
+  scaffold_script: place-files.sh

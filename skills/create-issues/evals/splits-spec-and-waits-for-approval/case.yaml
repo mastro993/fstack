@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: splits-spec-and-waits-for-approval
+expected_outcome: |
+  The spec, ADRs 0004-0006 and the confirm-page prototype are agreed and already on origin/main; the
+  spec has no slices. The run numbers the spec's requirements, classifies the work as M (or L) since
+  it spans the nightly job, renewals, a signed link with a confirm page and the loan history, and
+  shows a plan without filing anything: a parent tracking issue with sub-issues, the first a tracer
+  bullet (a reminder email whose signed link renews a loan through the confirm page), behind a flag
+  if it uses one, with the flag-removal issue planned up front. Each sub-issue names the split trigger
+  behind it and its blockers; parallel issues touch disjoint code; a traceability matrix maps every
+  requirement to exactly one issue; the prototype and ADRs are listed against the issues that need
+  them. It asks whether to file the plan, and opens no issue and no pull request.
+context:
+  scaffold_script: place-files.sh

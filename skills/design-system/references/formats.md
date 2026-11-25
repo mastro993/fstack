@@ -75,24 +75,19 @@ The module's `README.md`, written for people:
 
 ## Issue
 
-```md
-## What
-The slice in two or three sentences: the components it delivers and the call sites it migrates.
+The create-issues skill owns the issue format. Each design-system issue adds these to its implementation notes and acceptance criteria:
 
+```md
 ## Components
 - `Button` (atom): `variant`, `size`, `loading`. Tokens: `primary`, `rounded.md`, `label-md`.
 
 ## Call sites
 - `src/features/billing/PayButton.tsx:12`: replace with `Button variant="primary"`.
 
-## Acceptance
+## Acceptance criteria
 - [ ] Each component renders and is tested in isolation, covering its variants and states.
 - [ ] Every listed call site uses the module, and no raw value remains at those sites.
 - [ ] The module README's catalog lists the new components.
-
-## Context
-Plan: docs/design-system/plan.md#slices · Spec: DESIGN.md
-Blocked by: #12
 ```
 
-Title each issue with the outcome ("Buttons come from the design system"), not the layer. When the user picked Issues without a plan, put each issue's component details and call sites in full, so it stands without the plan, and link `DESIGN.md` for the tokens.
+When the user picked Issues without a plan, put each issue's component details and call sites in full, so it stands without the plan, and link `DESIGN.md` for the tokens.

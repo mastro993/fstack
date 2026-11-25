@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- Approved prototype for the renew confirm page (spec: docs/specs/email-renewals.md, rule 6).
+     Static: switch states with the buttons at the bottom. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Renew your loan · Readwell</title>
+<style>
+  body { font: 18px/1.5 system-ui, sans-serif; max-width: 26rem; margin: 2rem auto; padding: 0 1rem; }
+  .state { display: none; } .state.on { display: block; }
+  button.renew { font-size: 1.1rem; padding: .8rem 1.6rem; background: #1f6f43; color: #fff; border: 0; border-radius: .5rem; }
+  .note { color: #555; }
+  nav { margin-top: 3rem; font-size: .8rem; color: #888; }
+</style>
+</head>
+<body>
+<section class="state on" id="confirm">
+  <h1>Renew “The Overstory”?</h1>
+  <p>New due date: <strong>Friday 12 June</strong></p>
+  <form method="post"><button class="renew">Renew</button></form>
+  <p class="note">This is renewal 1 of 2.</p>
+</section>
+<section class="state" id="done">
+  <h1>Renewed</h1>
+  <p>“The Overstory” is now due <strong>Friday 12 June</strong>.</p>
+</section>
+<section class="state" id="used">
+  <h1>This link was already used</h1>
+  <p class="note">Your loan was renewed. Check the new due date in your latest email, or ask at the desk.</p>
+</section>
+<section class="state" id="expired">
+  <h1>This link has expired</h1>
+  <p class="note">Links work until the due date. Come to the desk and we'll sort it out.</p>
+</section>
+<section class="state" id="returned">
+  <h1>This book is already back</h1>
+  <p class="note">Nothing to renew. Thanks for returning it!</p>
+</section>
+<nav>Prototype states:
+  <button onclick="show('confirm')">confirm</button> <button onclick="show('done')">done</button>
+  <button onclick="show('used')">used</button> <button onclick="show('expired')">expired</button>
+  <button onclick="show('returned')">returned</button>
+</nav>
+<script>
+function show(id) { document.querySelectorAll('.state').forEach(s => s.classList.toggle('on', s.id === id)); }
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+schema_version: "1.1"
+name: approved-breakdown-lands-docs-then-files
+expected_outcome: |
+  The user approved the tier-M plan in breakdown.md: a parent tracking issue and five sub-issues.
+  The spec, ADRs 0004-0006 and the confirm-page prototype sit only on the local docs/email-renewals
+  branch. Before any issue exists, the run pushes that branch, opens a pull request for it, tells the
+  user the issues wait for its merge, and watches it without merging; the sandbox's
+  maintainer merges it on a later read. Then it updates main and files the parent first, then the
+  five sub-issues under it in dependency order, each self-contained: context with the quoted spec
+  excerpt and links at main's merge commit by full SHA (spec, ADRs, prototype), scope in and out,
+  testable acceptance criteria, likely touched files, blockers and parallel issues, the feature flag,
+  a definition of done, and the tier and trigger. Blockers are named by number and set as native
+  blocked-by links. It replies with the issue links and the order, saying which issues can run in
+  parallel.
+context:
+  scaffold_script: place-files.sh

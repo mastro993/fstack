@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: issues-pick-hands-off-to-create-issues
+expected_outcome: |
+  The spec is approved and the user chose issues. The run hands the spec to the create-issues
+  skill, which numbers its requirements, classifies the work (M or L), and turns the spec's five
+  slices into a plan: a parent tracking issue with sub-issues, merging any slice no split trigger
+  justifies and saying so, each naming its trigger and its blockers in dependency order (two
+  renewals before the signed link and the loan history; reminders and the signed link before the
+  renew button in the reminder), with a traceability matrix. It files nothing and opens no pull
+  request, asks whether to file the plan, and implements nothing.
+context:
+  scaffold_script: place-files.sh
