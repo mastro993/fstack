@@ -1,7 +1,7 @@
 ---
 name: ux-brainstorm
 description: Use when the user wants to brainstorm, explore, mock up, or prototype a UI or UX before building it, such as a new screen, flow, or component, a redesign, or "what should this look like?".
-compatibility: Needs the domain-driven-design skill from the same plugin. Works best with the Mobbin MCP, subagents, and a harness that renders HTML inline in the chat (T3 Code's html_render); otherwise opens the prototypes in the browser.
+compatibility: Needs the domain-driven-design and pr-babysit skills from the same plugin. Works best with the Mobbin MCP, subagents, and a harness that renders HTML inline in the chat (T3 Code's html_render); otherwise opens the prototypes in the browser.
 ---
 
 # UX brainstorm
@@ -85,7 +85,7 @@ When the user mixes variants or asks for changes, add the result as a new letter
 
 Write the handoff into the project, never `RUN`, which may end with the session. Copy the approved prototypes, `decisions.md`, and `references.md` to `OUT`. `OUT` is git-ignored and local to this machine, so every record and issue must stand without it: describe each approved variant in words, add a light-theme screenshot of it (from the preview tool or a headless browser), and mark any `OUT` path as local. Attach the screenshot to each issue that builds that area; to embed it in a decision record, save it beside the record.
 
-Use the project's own format when it has one: decision records that keep the alternatives the user rejected, glossary updates, and issues or tickets as vertical slices with dependency order, `file:line` references, and acceptance checks. Show the issue list, and file it in the tracker only once the user approves. Otherwise write `OUT/spec.md`. Either way, cover:
+Use the project's own format when it has one: decision records that keep the alternatives the user rejected, glossary updates, and issues or tickets as vertical slices with dependency order, `file:line` references, and acceptance checks. Otherwise write `OUT/spec.md`. Either way, cover:
 
 - **Decisions and picks**: the decisions and the approved variant per area, in words with its screenshot, plus reference links and the local prototype path.
 - **States**: each area's states, what triggers them, and what they show.
@@ -94,5 +94,7 @@ Use the project's own format when it has one: decision records that keep the alt
 - **Copy**: every string, icon, tooltip, and aria-label.
 - **Interactions**: what each control does, keyboard and focus order.
 - **Open questions.**
+
+When the handoff has issues, find the tracker first (the git remote with `gh`, or a tracker MCP); with none reachable, say so and keep the slices in the records. Show the issue list, and file it only once the user approves. Issues outlive branches, so when they link records or glossary written into the project, land those first, after the approval: commit them on a branch, open a pull request for it, ready for review, and tell the user in a line, with the link, that the issues wait for its merge. Run the pr-babysit skill on it, merging only if the user asked; once it merges, update the local default branch and file the issues with every link at that commit's full SHA (`blob/<sha>/<path>`), so even an old issue shows the records as they were. If it closes unmerged, ask the user how to go on. A handoff that lives only in `OUT` has nothing to land or link.
 
 Done when an engineer could build from the handoff alone: each decision is implemented by exactly one issue or spec section (decision records and the glossary may cite it), and every element and string appears in the component map and copy. Reply with the paths or links and a three-line summary, then ask whether to implement it now. On yes, build from the component map. Ask first before creating any new component or icon, when a match is unclear, and, with no codebase, about the stack and where the project lives.
