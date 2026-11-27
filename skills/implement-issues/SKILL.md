@@ -12,7 +12,7 @@ Reach the tracker with the commands in implement-issue's [references/trackers.md
 
 ## 1. Collect
 
-Expand the goal into issues: a parent stands for its open children, recursively. If one issue remains, hand it to implement-issue; the rest of this skill doesn't apply.
+Expand the goal into issues: a parent stands for its open children, recursively. A goal of one issue with no parent goes straight to implement-issue; a parent with one open child left is still a goal here, a one-issue batch followed by step 5.
 
 For each issue, record what the plan needs, from its text and a glance at the code:
 
@@ -79,9 +79,9 @@ Once the gate opens, collect again, and show the plan again only if it changed.
 
 ## 5. Close the parent
 
-When every child of a parent goal is done, check each of the parent's own criteria against the merged work, citing the PR or file:line.
+When every child of a parent is done (the goal's parent, or a nested parent found while expanding it, innermost first), check each of that parent's own criteria against the merged work, citing the PR or file:line.
 
 - **All met**: close the parent with a comment listing the merged PRs, unless the tracker already did.
 - **Gaps**: list each unmet criterion, offer to file it with the create-issues skill, and leave the parent open.
 
-Done when the parent is closed or its gaps are in front of the user.
+Done when each such parent is closed or its gaps are in front of the user.
