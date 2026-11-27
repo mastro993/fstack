@@ -2,7 +2,7 @@
 set -eu
 here="$(dirname "$0")"
 cp -R "$here/../../../feature-design/evals/challenges-idea-before-interview/files/." .
-cp -R "$here/../clear-issue-ships-test-first-pr/files/bin" .
+cp -R "$here/../clear-issue-built-test-first/files/bin" .
 cp -R "$here/files/." .
 git init -q --bare remote/readwell.git
 git -C readwell init -q -b main

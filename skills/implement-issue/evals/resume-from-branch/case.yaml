@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: resume-from-branch
+expected_outcome: |
+  A local branch 14-overdue-days-line for #14 holds one commit from an earlier session: the days-overdue
+  line, with its test. The first-email and subject criteria have no commit yet. The run finds the branch,
+  continues on it (no new branch), does not redo the committed item, makes the first email leave out the
+  days-overdue line (the branch currently prints "0 days overdue"), adds tests for the open items, and
+  commits them on 14-overdue-days-line. It pushes nothing and opens no pull request. The reply's checklist
+  ticks the automated items with their tests, leaves the VPS check an unticked manual check, and ends with
+  STATUS: DONE.
+context:
+  scaffold_script: place-files.sh

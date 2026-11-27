@@ -1,3 +1,3 @@
 interface:
   display_name: "Implement Issue"
-  short_description: "Build issues test-first into checked, resumable pull requests: one issue, or several in merge-gated batches"
+  short_description: "Build issues test-first into checked, resumable branches: one issue, or several in merge-gated batches"

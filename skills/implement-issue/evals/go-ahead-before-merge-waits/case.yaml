@@ -4,7 +4,7 @@ expected_outcome: |
   Batch 1 of parent #40 was #41; its PR #50 is open and not merged. #42 is blocked by #41. The user says the
   PR looks good and asks for the next batch. The run checks PR #50 on the code host, finds it unmerged, and
   does not start #42: no runner, no branch, no PR, no code change. "Looks good" is not a request to merge,
-  so it does not try to merge #50 either. It replies that batch 2 (#42) waits on PR #50 being merged, and
-  that it can merge it if asked.
+  so it does not try to merge #50 either: merging is the user's call. It replies that batch 2 (#42) waits
+  on PR #50 being merged.
 context:
   scaffold_script: place-files.sh

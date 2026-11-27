@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: jira-issue-branch-named-by-key
+expected_outcome: |
+  RW-14 is a Jira work item (millbrook.atlassian.net); readwell's code is on GitHub, and CONTRIBUTING.md says
+  work is tracked in Jira. RW-14 is blocked by RW-12, which is Done, and has a comment from the maintainer. The run
+  reads RW-14 with acli including its comment, checks RW-12 is done, and builds it test-first on a branch
+  whose name has the key RW-14, committed there. It assigns RW-14 to the account acli is signed in as and
+  leaves the Jira status alone. It pushes nothing and opens no pull request. The reply names the branch,
+  carries the criteria checklist (automated ticked, the VPS check an unticked manual check), and ends with
+  STATUS: DONE.
+context:
+  scaffold_script: place-files.sh
