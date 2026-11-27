@@ -1,0 +1,16 @@
+{
+  "repo": "evals/kiosk",
+  "default_branch": "main",
+  "prs": {
+    "7": {
+      "title": "WIP: cart discounts",
+      "body": "Starting on discounts. Not done yet: still need the coupon side.",
+      "state": "OPEN",
+      "draft": true,
+      "author": "cart-dev",
+      "base": "main",
+      "head": "wip/cart-discounts"
+    }
+  },
+  "issues": {}
+}

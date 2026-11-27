@@ -1,0 +1,3 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Review a change and report only the findings that survive verification"

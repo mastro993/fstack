@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: clean-refactor-no-findings
+expected_outcome: |
+  refactor/parse-duration extracts duplicated duration parsing into one tested function without changing
+  behavior. The review finds nothing worth reporting and says so in one line, writing a review-findings.json with no
+  findings. It invents no nits and changes no file.
+context:
+  scaffold_script: place-files.sh

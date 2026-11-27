@@ -1,0 +1,26 @@
+{
+  "repo": "evals/shop",
+  "default_branch": "main",
+  "prs": {
+    "14": {
+      "title": "Percentage coupons (closes #12)",
+      "body": "Adds percentage coupons with a cap and an expiry date, and a preview endpoint so the cart can show the total before applying a code. SPRING20 is in COUPONS.\n\nCloses #12",
+      "state": "OPEN",
+      "draft": false,
+      "author": "coupon-dev",
+      "base": "main",
+      "head": "feat/percentage-coupons",
+      "closes": [12]
+    }
+  },
+  "issues": {
+    "12": {
+      "title": "Percentage coupons",
+      "author": "shop-lead",
+      "body": "We want percentage coupons for the spring campaign: SPRING20 takes 20% off, capped at 30.00, until the end of April 2027.\n\n## Acceptance criteria\n\n1. A percentage coupon takes `percent`% off the order subtotal, rounded down to the cent.\n2. The discount never exceeds the coupon's `max_off_cents`.\n3. A coupon with `expires_on` is rejected with `CouponExpired` once `expires_on` has passed. It still works on the `expires_on` day itself.\n4. The same coupon can't be applied twice to one order: raise `CouponAlreadyApplied`.",
+      "comments": [
+        {"user": "shop-lead", "body": "Confirmed with marketing: the cap is per order, not per item."}
+      ]
+    }
+  }
+}

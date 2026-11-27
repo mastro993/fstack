@@ -1,0 +1,391 @@
+#!/usr/bin/env python3
+"""Stub gh CLI for the code-review evals.
+
+Simulates GitHub for the pull requests in .gh-stub/scenario.json on top of a local bare repository
+(remote.git), which holds each PR's branch and refs/pull/<n>/head. Reads are served from the
+scenario and the repository; writes (reviews, comments) are recorded in .gh-stub/state.json and
+every call is appended to .gh-stub/calls.log, both for grading.
+
+scenario.json: {"repo": "owner/name", "default_branch": "main",
+  "prs": {"<n>": {"title", "body", "state", "draft", "author", "author_is_bot", "base", "head",
+                  "closes": [issue numbers], "review_comments": [{"user", "path", "line", "body",
+                  "outdated"}], "reviews": [{"user", "state", "body"}], "comments": [{"user", "body"}]}},
+  "issues": {"<n>": {"title", "body", "state", "comments": [{"user", "body"}]}}}
+
+A commit maps to the PR whose number it names as "(#<n>)" in its subject, as squash merges do.
+"""
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+STUB = ROOT / ".gh-stub"
+REMOTE = ROOT / "remote.git"
+SCN = json.loads((STUB / "scenario.json").read_text())
+STATE_FILE = STUB / "state.json"
+REPO = SCN["repo"]
+WEB = f"https://git.example.com/{REPO}"
+ARGS = sys.argv[1:]
+
+with open(STUB / "calls.log", "a") as log:
+    log.write(json.dumps(ARGS) + "\n")
+
+STATE = json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {"reviews": [], "comments": [], "issue_comments": [], "seq": 900}
+
+
+def save():
+    STATE_FILE.write_text(json.dumps(STATE, indent=1))
+
+
+def fail(msg, code=1):
+    print(msg, file=sys.stderr)
+    sys.exit(code)
+
+
+def git(*args):
+    return subprocess.run(["git", "--git-dir", str(REMOTE), *args], capture_output=True, text=True, check=True).stdout
+
+
+def sha(ref):
+    return git("rev-parse", ref).strip()
+
+
+def opt(args, *names):
+    """Value of the first of names in args, or None."""
+    for i, a in enumerate(args):
+        for n in names:
+            if a == n and i + 1 < len(args):
+                return args[i + 1]
+            if a.startswith(n + "="):
+                return a[len(n) + 1:]
+    return None
+
+
+def has(args, *names):
+    return any(a in names for a in args)
+
+
+def positional(args, takes_value=("-R", "--repo", "--json", "-q", "--jq", "-t", "--template", "-b", "--body",
+                                  "-F", "--body-file", "-f", "--field", "--raw-field", "-X", "--method", "-H",
+                                  "--header", "--input", "-s", "--state", "-L", "--limit", "--head", "--base")):
+    out, skip = [], False
+    for a in args:
+        if skip:
+            skip = False
+        elif a in takes_value:
+            skip = True
+        elif not a.startswith("-"):
+            out.append(a)
+    return out
+
+
+def emit(obj, args):
+    jq = opt(args, "-q", "--jq")
+    text = json.dumps(obj, indent=2)
+    if jq:
+        if not shutil.which("jq"):
+            fail("gh stub: --jq needs jq on PATH")
+        proc = subprocess.run(["jq", "-r", "-c", jq], input=text, capture_output=True, text=True)
+        if proc.returncode:
+            fail(proc.stderr.strip())
+        text = proc.stdout.rstrip("\n")
+    print(text)
+
+
+def pr_number(arg):
+    if arg is None:
+        branch = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
+        for n, pr in SCN["prs"].items():
+            if pr["head"] == branch:
+                return n
+        fail(f'no pull requests found for branch "{branch}"')
+    m = re.search(r"(\d+)/?$", arg)
+    if m and m.group(1) in SCN["prs"]:
+        return m.group(1)
+    for n, pr in SCN["prs"].items():
+        if pr["head"] == arg:
+            return n
+    fail(f"GraphQL: Could not resolve to a PullRequest with the number of {arg}. (repository.pullRequest)")
+
+
+def user(login, is_bot=False):
+    return {"login": login, "type": "Bot" if is_bot else "User", "html_url": f"https://git.example.com/{login}"}
+
+
+def diff(n, *extra):
+    pr = SCN["prs"][n]
+    return git("diff", "--no-color", *extra, f"refs/heads/{pr['base']}...refs/heads/{pr['head']}")
+
+
+def files(n):
+    out = []
+    for line in diff(n, "--numstat").splitlines():
+        add, dele, path = line.split("\t")
+        out.append({"path": path, "additions": int(add) if add != "-" else 0, "deletions": int(dele) if dele != "-" else 0})
+    return out
+
+
+def commits(n):
+    pr = SCN["prs"][n]
+    log = git("log", "--reverse", "--format=%H%x09%s", f"refs/heads/{pr['base']}..refs/heads/{pr['head']}")
+    return [dict(zip(("oid", "messageHeadline"), line.split("\t", 1))) for line in log.splitlines()]
+
+
+def review_comments(n):
+    pr = SCN["prs"][n]
+    out = []
+    for i, c in enumerate(pr.get("review_comments", [])):
+        out.append({"id": 100 + i, "user": user(c["user"]), "path": c["path"], "line": None if c.get("outdated") else c["line"],
+                    "original_line": c["line"], "position": None if c.get("outdated") else c["line"], "body": c["body"],
+                    "commit_id": sha(f"refs/heads/{pr['head']}"), "html_url": f"{WEB}/pull/{n}#discussion_r{100 + i}"})
+    for c in STATE["comments"]:
+        if c["pr"] == n:
+            out.append({k: v for k, v in c.items() if k != "pr"})
+    return out
+
+
+def reviews(n):
+    pr = SCN["prs"][n]
+    out = [{"id": 200 + i, "user": user(r["user"]), "state": r.get("state", "COMMENTED"), "body": r.get("body", ""),
+            "html_url": f"{WEB}/pull/{n}#pullrequestreview-{200 + i}"} for i, r in enumerate(pr.get("reviews", []))]
+    for r in STATE["reviews"]:
+        if r["pr"] == n:
+            out.append({"id": r["id"], "user": user("you"), "state": r["state"], "body": r["body"], "html_url": r["html_url"]})
+    return out
+
+
+def issue_comments(n):
+    src = SCN["prs"][n] if n in SCN["prs"] else SCN["issues"].get(n, {})
+    out = [{"id": 300 + i, "user": user(c["user"]), "body": c["body"]} for i, c in enumerate(src.get("comments", []))]
+    return out + [{k: v for k, v in c.items() if k != "pr"} for c in STATE["issue_comments"] if c["pr"] == n]
+
+
+def pr_json(n):
+    pr = SCN["prs"][n]
+    head = sha(f"refs/heads/{pr['head']}")
+    fs = files(n)
+    return {
+        "number": int(n), "url": f"{WEB}/pull/{n}", "title": pr["title"], "body": pr.get("body", ""),
+        "state": pr.get("state", "OPEN"), "isDraft": pr.get("draft", False),
+        "author": {"login": pr["author"], "is_bot": pr.get("author_is_bot", False), "name": ""},
+        "baseRefName": pr["base"], "headRefName": pr["head"], "headRefOid": head,
+        "baseRefOid": sha(f"refs/heads/{pr['base']}"),
+        "closingIssuesReferences": [{"number": i, "title": SCN["issues"][str(i)]["title"], "url": f"{WEB}/issues/{i}"}
+                                    for i in pr.get("closes", [])],
+        "comments": [{"author": {"login": c["user"]["login"]}, "body": c["body"]} for c in issue_comments(n)],
+        "reviews": [{"author": {"login": r["user"]["login"]}, "state": r["state"], "body": r["body"]} for r in reviews(n)],
+        "files": fs, "changedFiles": len(fs), "additions": sum(f["additions"] for f in fs),
+        "deletions": sum(f["deletions"] for f in fs), "commits": commits(n), "labels": [],
+        "mergeable": "MERGEABLE", "reviewDecision": "", "isCrossRepository": False,
+    }
+
+
+def select(obj, args):
+    fields = opt(args, "--json")
+    if fields is None:
+        return None
+    return {k: obj.get(k) for k in fields.split(",")}
+
+
+def text_pr(n, with_comments):
+    p = pr_json(n)
+    print(f"{p['title']} #{n}\n{p['state'].capitalize()} • {p['author']['login']} wants to merge {len(p['commits'])} commits "
+          f"into {p['baseRefName']} from {p['headRefName']} • +{p['additions']} -{p['deletions']}\n")
+    print(p["body"] or "No description provided")
+    if with_comments:
+        for c in p["comments"]:
+            print(f"\n{c['author']['login']} commented\n{c['body']}")
+    print(f"\nView this pull request on GitHub: {p['url']}")
+
+
+def issue_json(n):
+    if n not in SCN["issues"]:
+        fail(f"GraphQL: Could not resolve to an issue or pull request with the number of {n}. (repository.issue)")
+    i = SCN["issues"][n]
+    return {"number": int(n), "title": i["title"], "body": i.get("body", ""), "state": i.get("state", "OPEN"),
+            "url": f"{WEB}/issues/{n}", "author": {"login": i.get("author", "lead")}, "labels": [],
+            "comments": [{"author": {"login": c["user"]}, "body": c["body"]} for c in i.get("comments", [])]}
+
+
+def post_review(n, payload):
+    STATE["seq"] += 1
+    rid = STATE["seq"]
+    url = f"{WEB}/pull/{n}#pullrequestreview-{rid}"
+    event = (payload.get("event") or "PENDING").upper()
+    STATE["reviews"].append({"pr": n, "id": rid, "state": {"COMMENT": "COMMENTED", "APPROVE": "APPROVED",
+                             "REQUEST_CHANGES": "CHANGES_REQUESTED"}.get(event, event), "event": event,
+                             "body": payload.get("body", ""), "commit_id": payload.get("commit_id"),
+                             "comments": payload.get("comments", []), "html_url": url})
+    for c in payload.get("comments", []):
+        STATE["seq"] += 1
+        STATE["comments"].append({"pr": n, "id": STATE["seq"], "user": user("you"), "path": c.get("path"),
+                                  "line": c.get("line"), "original_line": c.get("line"), "position": c.get("line"),
+                                  "start_line": c.get("start_line"), "body": c.get("body", ""),
+                                  "commit_id": payload.get("commit_id"), "html_url": f"{WEB}/pull/{n}#discussion_r{STATE['seq']}"})
+    save()
+    return {"id": rid, "state": STATE["reviews"][-1]["state"], "html_url": url, "body": payload.get("body", "")}
+
+
+def fields_payload(args):
+    payload = {}
+    if opt(args, "--input"):
+        src = opt(args, "--input")
+        payload = json.load(sys.stdin if src == "-" else open(src))
+    for i, a in enumerate(args):
+        if a in ("-f", "-F", "--field", "--raw-field") and i + 1 < len(args):
+            k, _, v = args[i + 1].partition("=")
+            payload[k] = v
+    return payload
+
+
+def api(args):
+    endpoint = positional(args)[1] if len(positional(args)) > 1 else ""
+    method = (opt(args, "-X", "--method") or ("POST" if (opt(args, "--input") or has(args, "-f", "-F", "--field", "--raw-field")) and endpoint != "graphql" else "GET")).upper()
+    endpoint = endpoint.lstrip("/").replace("{owner}/{repo}", REPO).split("?")[0]
+    if endpoint == "graphql":
+        emit({"data": {"repository": {"pullRequest": {"reviewThreads": {"nodes": []}}}}}, args)
+        return
+    m = re.fullmatch(rf"repos/{re.escape(REPO)}(?:/(.*))?", endpoint)
+    if not m:
+        fail(f"gh: Not Found (HTTP 404)")
+    rest = m.group(1) or ""
+    if rest == "":
+        emit({"full_name": REPO, "name": REPO.split("/")[1], "default_branch": SCN.get("default_branch", "main"),
+              "html_url": WEB, "private": False}, args)
+        return
+    m = re.fullmatch(r"pulls/(\d+)(?:/(comments|reviews|files|commits))?", rest)
+    if m and m.group(1) in SCN["prs"]:
+        n, sub = m.group(1), m.group(2)
+        if method == "POST" and sub == "reviews":
+            emit(post_review(n, fields_payload(args)), args)
+        elif method == "POST" and sub == "comments":
+            p = fields_payload(args)
+            emit(post_review(n, {"event": "COMMENT", "body": "", "commit_id": p.get("commit_id"),
+                                 "comments": [p]}), args)
+        elif method != "GET":
+            fail("gh stub: unsupported method")
+        elif sub == "comments":
+            emit(review_comments(n), args)
+        elif sub == "reviews":
+            emit(reviews(n), args)
+        elif sub == "files":
+            emit([{"filename": f["path"], "additions": f["additions"], "deletions": f["deletions"]} for f in files(n)], args)
+        elif sub == "commits":
+            emit([{"sha": c["oid"], "commit": {"message": c["messageHeadline"]}} for c in commits(n)], args)
+        else:
+            p = pr_json(n)
+            emit({"number": int(n), "title": p["title"], "body": p["body"], "state": "open" if p["state"] == "OPEN" else "closed",
+                  "draft": p["isDraft"], "user": user(p["author"]["login"], p["author"]["is_bot"]), "html_url": p["url"],
+                  "head": {"ref": p["headRefName"], "sha": p["headRefOid"]}, "base": {"ref": p["baseRefName"], "sha": p["baseRefOid"]},
+                  "merged": p["state"] == "MERGED"}, args)
+        return
+    m = re.fullmatch(r"issues/(\d+)(/comments)?", rest)
+    if m:
+        n = m.group(1)
+        if m.group(2) and method == "POST":
+            STATE["seq"] += 1
+            body = fields_payload(args).get("body", "")
+            STATE["issue_comments"].append({"pr": n, "id": STATE["seq"], "user": user("you"), "body": body})
+            save()
+            emit({"id": STATE["seq"], "html_url": f"{WEB}/pull/{n}#issuecomment-{STATE['seq']}"}, args)
+        elif m.group(2):
+            emit(issue_comments(n), args)
+        else:
+            i = issue_json(n)
+            emit({"number": i["number"], "title": i["title"], "body": i["body"], "state": i["state"].lower(),
+                  "user": user(i["author"]["login"])}, args)
+        return
+    m = re.fullmatch(r"commits/([0-9a-f]{7,40})(/pulls)?", rest)
+    if m:
+        subject = git("log", "-1", "--format=%s", m.group(1)).strip()
+        numbers = re.findall(r"\(#(\d+)\)", subject)
+        if m.group(2):
+            emit([{"number": int(k), "title": subject, "html_url": f"{WEB}/pull/{k}", "state": "closed"} for k in numbers], args)
+        else:
+            emit({"sha": sha(m.group(1)), "commit": {"message": subject}}, args)
+        return
+    m = re.fullmatch(r"pulls/(\d+)/comments", rest)
+    if m:  # a PR outside the scenario: closed history, comments from scenario["history_comments"]
+        emit([{"id": 500 + i, "user": user(c["user"]), "path": c["path"], "line": c.get("line"), "original_line": c.get("line"),
+               "body": c["body"]} for i, c in enumerate(SCN.get("history_comments", {}).get(m.group(1), []))], args)
+        return
+    fail(f"gh: Not Found (HTTP 404)")
+
+
+def main():
+    if not ARGS or ARGS[0] in ("--version", "version"):
+        print("gh version 2.103.3 (stub)")
+        return
+    cmd, sub = ARGS[0], (ARGS[1] if len(ARGS) > 1 else "")
+    args = ARGS[2:]
+    if cmd == "auth":
+        print(f"git.example.com\n  ✓ Logged in to git.example.com account you (keyring)")
+    elif cmd == "repo" and sub == "view":
+        repo = {"nameWithOwner": REPO, "name": REPO.split("/")[1], "owner": {"login": REPO.split("/")[0]},
+                "url": WEB, "defaultBranchRef": {"name": SCN.get("default_branch", "main")}}
+        if has(args, "--json"):
+            emit(select(repo, args), args)
+        else:
+            print(f"{REPO}\n{WEB}")
+    elif cmd == "pr" and sub == "view":
+        pos = positional(args)
+        n = pr_number(pos[0] if pos else None)
+        if has(args, "--json"):
+            emit(select(pr_json(n), args), args)
+        else:
+            text_pr(n, has(args, "-c", "--comments"))
+    elif cmd == "pr" and sub == "diff":
+        pos = positional(args)
+        n = pr_number(pos[0] if pos else None)
+        print(diff(n, "--name-only") if has(args, "--name-only") else diff(n), end="")
+    elif cmd == "pr" and sub == "list":
+        rows = [pr_json(n) for n in SCN["prs"]]
+        state = (opt(args, "-s", "--state") or "open").upper()
+        rows = [r for r in rows if state == "ALL" or r["state"] == state]
+        if has(args, "--json"):
+            emit([select(r, args) for r in rows], args)
+        else:
+            for r in rows:
+                print(f"#{r['number']}\t{r['title']}\t{r['headRefName']}\t{r['state']}")
+    elif cmd == "pr" and sub == "checks":
+        print("no checks reported on the '{}' branch".format(SCN["prs"][pr_number((positional(args) or [None])[0])]["head"]))
+    elif cmd == "pr" and sub == "checkout":
+        n = pr_number(positional(args)[0])
+        branch = SCN["prs"][n]["head"]
+        subprocess.run(["git", "fetch", "-q", "origin", f"+refs/pull/{n}/head:refs/heads/{branch}"], check=True)
+        subprocess.run(["git", "checkout", "-q", branch], check=True)
+        print(f"Switched to branch '{branch}'")
+    elif cmd == "pr" and sub in ("review", "comment"):
+        n = pr_number((positional(args) or [None])[0])
+        body = opt(args, "-b", "--body") or (open(opt(args, "-F", "--body-file")).read() if opt(args, "-F", "--body-file") else "")
+        if sub == "comment":
+            STATE["seq"] += 1
+            STATE["issue_comments"].append({"pr": n, "id": STATE["seq"], "user": user("you"), "body": body})
+            save()
+            print(f"{WEB}/pull/{n}#issuecomment-{STATE['seq']}")
+        else:
+            event = "APPROVE" if has(args, "-a", "--approve") else "REQUEST_CHANGES" if has(args, "-r", "--request-changes") else "COMMENT"
+            post_review(n, {"event": event, "body": body})
+            print(f"✓ Reviewed pull request #{n}")
+    elif cmd == "issue" and sub == "view":
+        i = issue_json(positional(args)[0].lstrip("#"))
+        if has(args, "--json"):
+            emit(select(i, args), args)
+        else:
+            print(f"{i['title']} #{i['number']}\n{i['state'].capitalize()} • {i['author']['login']}\n\n{i['body']}")
+            if has(args, "-c", "--comments"):
+                for c in i["comments"]:
+                    print(f"\n{c['author']['login']} commented\n{c['body']}")
+    elif cmd == "api":
+        api(ARGS)
+    else:
+        fail(f"gh stub: unsupported command: gh {' '.join(ARGS)}")
+
+
+if __name__ == "__main__":
+    main()
