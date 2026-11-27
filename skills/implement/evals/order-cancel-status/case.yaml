@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: order-cancel-status
+expected_outcome: |
+  The run replaces the isPaid/isShipped booleans with one order status (a discriminated union, enum,
+  or state machine) that includes a cancelled state, instead of adding a third boolean such as isCancelled.
+  Cancelling works for unpaid and paid orders and is refused for shipped (and already cancelled) orders;
+  shipping or paying a cancelled order is refused. labels.ts and fulfillment.ts read the status, so a
+  cancelled order gets its own label and never appears on the pick list, and the impossible
+  "Shipped (unpaid)" branch and the unused isOpen export are gone. New behavior has tests through the
+  public functions, and `npm test` passes.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: nightly-import-rerun
+expected_outcome: |
+  The run finds that import_file commits row by row with no key, so a crash mid-file leaves the file in
+  the inbox and a rerun inserts its first rows again. It makes the import converge from the database's own
+  state: a unique constraint on payment_id with INSERT OR IGNORE / upsert (or a record of imported files
+  written in the same transaction as the rows), optionally with one transaction per file, so rerunning after
+  a crash at any point, including between the commit and the move, yields each payment once. It
+  accounts for existing databases that already hold duplicates (dedupes them or says how the unique index
+  will fail on them). summary.json is written to a temporary file and renamed into place, or the run says
+  why it is safe. A regression test simulates a crash partway through a file (or a rerun of the same file)
+  and asserts each payment is stored once. The unittest suite passes.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: mailer-api-migration
+expected_outcome: |
+  Every caller of send_email (signup, password x2, billing x3, digest, alerts) builds a Message and
+  sends it through Mailer.send / default_mailer().send, and notify/mail.py with send_email is deleted, with no
+  alias, wrapper, or re-export left behind. tests/test_send_email.py, which only protected the old helper, is
+  deleted or folded into Mailer tests. The password test that mocks notify.password.send_email is rewritten
+  to assert what the recording transport received. alerts.ops_alert, whose recipients may be a single
+  string or a list, keeps working for both or the run states the choice. The unittest suite passes.
+context:
+  scaffold_script: place-files.sh

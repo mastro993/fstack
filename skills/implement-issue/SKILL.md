@@ -1,7 +1,7 @@
 ---
 name: implement-issue
 description: Use when the user asks to implement, fix, or resume one specific issue or ticket on any tracker, such as "implement #42", "pick up PROJ-118", "carry on with #42", or when another skill hands off one issue to build.
-compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the test-driven-development skill from the same plugin (pr-ship, when the user asks to merge a GitHub PR). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them.
+compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the implement and test-driven-development skills from the same plugin (pr-ship, when the user asks to merge a GitHub PR). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them.
 ---
 
 # Implement issue
@@ -73,7 +73,7 @@ Add the issue's definition-of-done items. Done when every criterion has its chec
 
 **Claim the issue** before the first commit, so others see it's taken: assign it to the account your tracker tool is signed in as (the agent's own account where it has one, else the user's), as trackers.md's Assign row shows. Already the user's or yours, it's claimed. Claiming sets the assignee only: leave the issue's status to the tracker's integration unless the user or repo asks you to move it. If the tracker refuses the assignment, say so in the reply and carry on.
 
-Branch from the up-to-date default branch, named the repo's way with the issue reference in it (the bare key, like `PROJ-118`, where the tracker links branches by key). For each automated item, load the test-driven-development skill and follow it: this skill's baseline and checklist are its ground step and test list. Without that skill: write the test, watch it fail for the reason the criterion names, make it pass, refactor on green.
+Branch from the up-to-date default branch, named the repo's way with the issue reference in it (the bare key, like `PROJ-118`, where the tracker links branches by key). Load the implement skill for the shape of the code across the whole checklist; this skill's baseline is its first check run. For each automated item, load the test-driven-development skill and follow it: this skill's baseline and checklist are its ground step and test list. Without test-driven-development: write the test, watch it fail for the reason the criterion names, make it pass, refactor on green.
 
 After each change, run the narrowest check that covers it (the one test file, typecheck or lint on the touched files); the full suite runs at item boundaries and in step 5.
 
