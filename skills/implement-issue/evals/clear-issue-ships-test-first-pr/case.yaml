@@ -1,8 +1,8 @@
 schema_version: "1.1"
 name: clear-issue-ships-test-first-pr
 expected_outcome: |
-  Issue #14 has clear acceptance criteria, no dependencies, and code that matches it. The run implements
-  it test-first on a branch named with 14: tests for the days-overdue line (7 and 14 days), for no line on
+  Issue #14 has clear acceptance criteria, no dependencies, and code that matches it. The run assigns it to
+  the account gh is signed in as, then implements it test-first on a branch named with 14: tests for the days-overdue line (7 and 14 days), for no line on
   the first email, and for the unchanged subject, written and seen failing before src/reminders.js changes.
   It touches only src/reminders.js and the tests (no change to loans.js, holds.js, or #13's reminder
   time), runs the full suite (node --test), pushes, and opens one PR with Closes #14 whose checklist ticks

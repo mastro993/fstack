@@ -72,7 +72,8 @@ def positional():
 
 
 VALUE_FLAGS = {"--json", "--jq", "-q", "--body", "-b", "--body-file", "-F", "--title", "-t", "--base", "-B", "--head", "-H",
-               "--state", "-s", "--search", "-S", "--label", "-l", "--limit", "-L", "--name", "-n", "--repo", "-R", "--add-label"}
+               "--state", "-s", "--search", "-S", "--label", "-l", "--limit", "-L", "--name", "-n", "--repo", "-R", "--add-label",
+               "--add-assignee", "--remove-assignee"}
 
 
 def current_branch():
@@ -85,6 +86,7 @@ def current_branch():
 def issue_json(issue):
     closing = [{"number": p["number"], "url": p["url"]} for p in state["pulls"] if f"#{issue['number']}" in p["body"]]
     return select(dict(issue, id=issue["number"] + 1000, closedByPullRequestsReferences=closing,
+                       assignees=[{"login": a} for a in issue.get("assignees", [])],
                        comments=[{"author": {"login": c["author"]}, "body": c["body"]} for c in issue["comments"]]))
 
 
@@ -126,7 +128,8 @@ elif cmd == ["issue", "view"]:
     if "--json" in args:
         output(issue_json(issue))
     else:
-        print(f"title:\t{issue['title']}\nstate:\t{issue['state']}\nlabels:\t{', '.join(issue['labels'])}\nnumber:\t{issue['number']}\n--\n{issue['body']}")
+        print(f"title:\t{issue['title']}\nstate:\t{issue['state']}\nassignees:\t{', '.join(issue.get('assignees', []))}\n"
+              f"labels:\t{', '.join(issue['labels'])}\nnumber:\t{issue['number']}\n--\n{issue['body']}")
         if "--comments" in args or "-c" in args:
             for c in issue["comments"]:
                 print(f"\n--\nauthor:\t{c['author']}\n--\n{c['body']}")
@@ -143,6 +146,11 @@ elif cmd == ["issue", "edit"]:
     if flag("--body", "-b", "--body-file", "-F"):
         issue["body"] = body()
     issue["labels"] += flag("--add-label", many=True)
+    for login in flag("--add-assignee", many=True):
+        for name in login.split(","):
+            name = "millbrook-volunteer" if name == "@me" else name
+            if name not in issue.setdefault("assignees", []):
+                issue["assignees"].append(name)
     save()
     print(issue["url"])
 elif cmd == ["issue", "develop"]:

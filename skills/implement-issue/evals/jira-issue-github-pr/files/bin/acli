@@ -19,7 +19,7 @@ with (ROOT / "calls.log").open("a") as log:
     log.write(json.dumps(args) + "\n")
 state = json.loads(STORE.read_text())
 VALUE_FLAGS = {"--key", "-k", "--fields", "-f", "--jql", "--body", "-b", "--body-file", "-F", "--status", "-s", "--limit", "--order",
-               "--type", "--out", "--in", "--site", "--email"}
+               "--type", "--out", "--in", "--site", "--email", "--assignee", "-a"}
 
 
 def flag(*names):
@@ -71,7 +71,7 @@ def comments_json(i):
 def item_json(i):
     return {"key": i["key"], "self": f"https://{SITE}/rest/api/3/issue/{i['key']}",
             "fields": {"summary": i["summary"], "description": i["description"], "status": status_json(i),
-                       "issuetype": {"name": i["type"]}, "labels": i["labels"], "issuelinks": links_json(i),
+                       "issuetype": {"name": i["type"]}, "assignee": {"displayName": i["assignee"]} if i.get("assignee") else None, "labels": i["labels"], "issuelinks": links_json(i),
                        "subtasks": [], "parent": None, "comment": {"comments": comments_json(i), "total": len(i["comments"])},
                        "attachment": []}}
 
@@ -135,10 +135,16 @@ elif cmd == ["jira", "workitem", "search"]:
         output([item_json(i) for i in found])
     else:
         print("\n".join(f"{i['key']}\t{i['status']}\t{i['summary']}" for i in found) or "No work items found")
+elif cmd == ["jira", "workitem", "assign"]:
+    i = item(flag("--key", "-k") or positional(3))
+    who = flag("--assignee", "-a")
+    i["assignee"] = "Readwell volunteer" if who in ("@me", "volunteer@millbrook.org") else who
+    STORE.write_text(json.dumps(state, indent=2))
+    print(f"✓ Assigned {i['key']} to {i['assignee']}")
 elif cmd == ["jira", "workitem", "transition"]:
     i = item(flag("--key", "-k") or positional(3))
     i["status"] = flag("--status", "-s") or i["status"]
     STORE.write_text(json.dumps(state, indent=2))
     print(f"✓ Transitioned {i['key']} to {i['status']}")
 else:
-    sys.exit(f"acli stub: `acli {' '.join(args[:3])}` is not available in this sandbox (Jira work items: view, search, comments, links, transition)")
+    sys.exit(f"acli stub: `acli {' '.join(args[:3])}` is not available in this sandbox (Jira work items: view, search, comments, links, assign, transition)")
