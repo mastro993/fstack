@@ -23,6 +23,7 @@
     "./skills/feature-design",
     "./skills/implement",
     "./skills/implement-issue",
+    "./skills/pr-open",
     "./skills/pr-babysit",
     "./skills/pr-ship",
     "./skills/receiving-code-review",
