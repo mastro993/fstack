@@ -40,7 +40,7 @@ Fill the repo's template when it has one: keep its headings, order, and checkbox
 - **A `diff` block** when the point is a before and after of a shape that already exists: the few code lines that carry the change, or a sketch of a call tree, component tree, file tree, or rule in pseudocode with `+` and `-` lines. The Files tab holds the rest.
 - **A table** when items share attributes: endpoints and their status codes, options and defaults.
 
-The prose around them is short, plain sentences in the project's own terms, written for a reviewer who hasn't seen the conversation. Every claim about behavior comes from the diff, a test, or a command you ran.
+The prose around them is short sentences in everyday words, written for a reviewer who hasn't seen the conversation: use the project's own names for its things, and say everything else the way you'd say it to a teammate. Every claim about behavior comes from the diff, a test, or a command you ran.
 
 **Merge danger** gets its own section, in prose, right after What in the default template:
 
