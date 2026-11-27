@@ -1,0 +1,20 @@
+{
+ "repo": "readwell-dev/shelfwise",
+ "default_branch": "main",
+ "viewer": "readwell-dev",
+ "fixture": {
+  "base": "main",
+  "head": "feat/LIB-204-hold-expiry",
+  "commits": [
+   {"dir": "c1", "message": "feat: ready state for holds"},
+   {"dir": "c2", "message": "feat: expire uncollected holds"}
+  ]
+ },
+ "issues": {},
+ "merged_titles": [
+  "feat(loans): [LIB-188] allow one renewal per loan",
+  "fix(reports): [LIB-197] count overdue loans per branch",
+  "refactor(holds): move the queue into its own module",
+  "chore: pin python to 3.12 in CI"
+ ]
+}

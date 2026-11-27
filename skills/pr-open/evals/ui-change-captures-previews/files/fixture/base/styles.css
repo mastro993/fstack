@@ -1,0 +1,10 @@
+body { font-family: system-ui, sans-serif; margin: 0; background: #faf7f2; color: #2b2118; }
+header { padding: 48px 24px 16px; text-align: center; }
+h1 { margin: 0 0 8px; font-size: 36px; }
+.plans { display: flex; gap: 24px; justify-content: center; padding: 24px; flex-wrap: wrap; }
+.plan { background: #fff; border: 1px solid #e4dccf; border-radius: 12px; padding: 28px; width: 220px; position: relative; }
+.plan h2 { margin: 0; font-size: 20px; }
+.price { font-size: 32px; font-weight: 700; margin: 12px 0; }
+.price small { font-size: 14px; font-weight: 400; color: #7a6a58; }
+.plan ul { padding-left: 18px; line-height: 1.7; min-height: 110px; }
+.cta { display: block; text-align: center; padding: 10px; border-radius: 8px; background: #e4dccf; color: #2b2118; text-decoration: none; font-weight: 600; }

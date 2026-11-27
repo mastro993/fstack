@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: ui-change-captures-previews
+expected_outcome: |
+  The branch restyles a static pricing page: the Team plan gets a "Most popular" badge and an
+  accent border, and the CTAs read "Get started" / "Start free trial" instead of "Buy". The run
+  serves main and the branch side by side (a worktree for main), captures before and after
+  screenshots of pricing.html, looks at them, attaches them with `gh pr create --attach`, and
+  lays them out in a Before | After table. The title is like
+  `feat(pricing): highlight the team plan and reword the plan buttons`. The user's checkout ends
+  on the branch with a clean tree, and the servers are stopped.
+context:
+  scaffold_script: place-files.sh

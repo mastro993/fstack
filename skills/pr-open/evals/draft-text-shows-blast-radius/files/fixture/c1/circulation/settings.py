@@ -1,0 +1,1 @@
+HOLD_PICKUP_DAYS = 7

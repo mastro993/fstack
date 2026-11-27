@@ -1,7 +1,7 @@
 ---
 name: pr-ship
 description: Use when the user asks to ship, land, or merge a change or pull request ("ship it", "get this into main", "merge #42"). Opens the PR or marks a draft ready, babysits CI, keeps automated reviewers (CodeRabbit, Pullfrog, Claude, Copilot, ...) reviewing until a round comes back clean, then merges.
-compatibility: Needs the gh CLI (authenticated), git, python3, and the pr-babysit skill from the same plugin.
+compatibility: Needs the gh CLI (authenticated), git, python3, and the pr-open and pr-babysit skills from the same plugin.
 allowed-tools: Bash(gh pr merge *)
 ---
 
@@ -13,7 +13,7 @@ The user asked for the change to land: get it merged through every gate the repo
 
 Look up the PR the user named, or the current branch's: `gh pr view --json number,url,state,isDraft,headRefName,baseRefName`. Work not yet on the remote (`git status -sb`) ships too: commit its files, asking if it's unclear which belong to it, and push them to the PR's branch.
 
-- **No PR.** On the base branch, move the work to a new branch first. Push with `-u`, then `gh pr create` against the default branch, ready for review. Fill in the repo's PR template if it has one (`.github/pull_request_template.md` or `.github/PULL_REQUEST_TEMPLATE/`), and add `Closes #<n>` when the change resolves an issue.
+- **No PR.** Load the pr-open skill and open it with that, against the default branch. If it opened as a draft, `gh pr ready <n>`.
 - **Draft.** `gh pr ready <n>`.
 - **Merged already.** With newer commits on the branch, ship those as a new PR from the updated base; otherwise report it with the link and stop. **Closed:** ask before reopening.
 

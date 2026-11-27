@@ -1,7 +1,7 @@
 ---
 name: implement-issue
 description: Use when the user asks to implement, fix, or resume issues or tickets on any tracker, one or several, or a parent issue (an epic or tracking issue) through its sub-issues, such as "implement #42", "pick up PROJ-118", "carry on with #42", "implement #12, #15 and #19", "work through the sub-issues of #40", or "start the next batch", or when another skill hands off issues to build.
-compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the implement and test-driven-development skills from the same plugin (pr-ship, when the user asks to merge a GitHub PR; create-issues, to file a parent's gaps). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them, and threads or subagents to run several issues.
+compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the implement and test-driven-development skills from the same plugin (pr-open, to open a GitHub PR; pr-ship, when the user asks to merge a GitHub PR; create-issues, to file a parent's gaps). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them, and threads or subagents to run several issues.
 ---
 
 # Implement issue
@@ -79,7 +79,7 @@ Branch from the up-to-date default branch, named the repo's way with the issue r
 
 After each change, run the narrowest check that covers it (the one test file, typecheck or lint on the touched files); the full suite runs at item boundaries and in step 5.
 
-When an item is green, commit only the files you changed, push, and tick it. After the first item, open the PR as a draft, since it's unfinished, with the template below; then it is the progress record. Its first line is the tracker's link-and-close line from trackers.md (`Closes #42` on GitHub), so merging closes the issue where the tracker supports that.
+When an item is green, commit only the files you changed, push, and tick it. After the first item, open the PR as a draft, since it's unfinished: on GitHub with the pr-open skill, its sections followed by the Checklist, Decisions, Deviations, and Follow-ups of the template below; elsewhere with that template. Then it is the progress record. Its first line is the tracker's link-and-close line from trackers.md (`Closes #42` on GitHub), so merging closes the issue where the tracker supports that.
 
 - **Copy the pattern.** Add an abstraction (a base class, a helper module, a dependency) only when nothing existing fits, and say why in the PR.
 - **Exactly the issue.** The implement skill's subtraction (deleting what the end state no longer needs in the change's path) is part of the work; list each deletion under Decisions. Other extras go in the Follow-ups list. A change the criteria don't need is a stop (below).
@@ -108,7 +108,7 @@ Done when full verification is at or above the baseline, every item is met or ma
 
 ## 6. Finish
 
-Write the PR body's final form, inside the repo's PR template if it has one (trackers.md says where each code host keeps it). Leave it a draft or mark it ready the way the user and repo open PRs; for a draft, tell the user it waits on them. Merge only when the user asked to: on GitHub, load the pr-ship skill and run it on this PR; elsewhere, use the code host's ready, checks, and merge commands from trackers.md, merging once its required checks and approvals pass, never around them.
+Write the PR's final title and body: on GitHub with the pr-open skill, keeping the Checklist, Decisions, Deviations, and Follow-ups; elsewhere inside the repo's PR template if it has one (trackers.md says where each code host keeps it). Leave it a draft or mark it ready the way the user and repo open PRs; for a draft, tell the user it waits on them. Merge only when the user asked to: on GitHub, load the pr-ship skill and run it on this PR; elsewhere, use the code host's ready, checks, and merge commands from trackers.md, merging once its required checks and approvals pass, never around them.
 
 Reply, dropping empty lines:
 
