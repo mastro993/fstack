@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: config-timeout-at-boundary
+expected_outcome: |
+  The run parses the environment once, at startup, into a typed config (FEED_URL, HTTP_RETRIES,
+  REQUEST_TIMEOUT_MS) with clear errors for bad values, and passes the parsed values to the http client
+  and feed instead of each function reading and re-validating process.env per call. fetchJson aborts a
+  request that exceeds the timeout (for example with AbortSignal.timeout) and counts it as a failed attempt.
+  The redundant `typeof url !== "string"` check inside fetchJson goes. Tests cover the timeout through a fake
+  fetch that never resolves or respects the abort signal, and a malformed REQUEST_TIMEOUT_MS is refused. The
+  README's variable table lists REQUEST_TIMEOUT_MS. `npm test` passes.
+context:
+  scaffold_script: place-files.sh

@@ -1,7 +1,7 @@
 ---
 name: implement-issue
 description: Use when the user asks to implement, fix, or resume one specific issue or ticket on any tracker, such as "implement #42", "pick up PROJ-118", "carry on with #42", or when another skill hands off one issue to build.
-compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the test-driven-development skill from the same plugin (pr-ship, when the user asks to merge a GitHub PR). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them.
+compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the implement and test-driven-development skills from the same plugin (pr-ship, when the user asks to merge a GitHub PR). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them.
 ---
 
 # Implement issue
@@ -73,14 +73,14 @@ Add the issue's definition-of-done items. Done when every criterion has its chec
 
 **Claim the issue** before the first commit, so others see it's taken: assign it to the account your tracker tool is signed in as (the agent's own account where it has one, else the user's), as trackers.md's Assign row shows. Already the user's or yours, it's claimed. Claiming sets the assignee only: leave the issue's status to the tracker's integration unless the user or repo asks you to move it. If the tracker refuses the assignment, say so in the reply and carry on.
 
-Branch from the up-to-date default branch, named the repo's way with the issue reference in it (the bare key, like `PROJ-118`, where the tracker links branches by key). For each automated item, load the test-driven-development skill and follow it: this skill's baseline and checklist are its ground step and test list. Without that skill: write the test, watch it fail for the reason the criterion names, make it pass, refactor on green.
+Branch from the up-to-date default branch, named the repo's way with the issue reference in it (the bare key, like `PROJ-118`, where the tracker links branches by key). Load the implement skill for the shape of the code across the whole checklist; this skill's baseline is its first check run. For each automated item, load the test-driven-development skill and follow it: this skill's baseline and checklist are its ground step and test list. Without test-driven-development: write the test, watch it fail for the reason the criterion names, make it pass, refactor on green.
 
 After each change, run the narrowest check that covers it (the one test file, typecheck or lint on the touched files); the full suite runs at item boundaries and in step 5.
 
 When an item is green, commit only the files you changed, push, and tick it. After the first item, open the PR as a draft, since it's unfinished, with the template below; then it is the progress record. Its first line is the tracker's link-and-close line from trackers.md (`Closes #42` on GitHub), so merging closes the issue where the tracker supports that.
 
 - **Copy the pattern.** Add an abstraction (a base class, a helper module, a dependency) only when nothing existing fits, and say why in the PR.
-- **Exactly the issue.** Extras go in the Follow-ups list. A change the criteria don't need is a stop (below).
+- **Exactly the issue.** The implement skill's subtraction (deleting what the end state no longer needs in the change's path) is part of the work; list each deletion under Decisions. Other extras go in the Follow-ups list. A change the criteria don't need is a stop (below).
 - **Keep the checks honest.** Never skip, disable, delete, or loosen a test, lint rule, or type check to get green: no `.skip`, no `eslint-disable`, `@ts-ignore`, `# type: ignore`, or `#[allow]`, no lowered thresholds or coverage, no expected value changed to match the output, no `--no-verify`. An existing test the issue makes wrong is updated as that item's red step and listed under Deviations; anything else red is a bug in your change.
 
 ## Stop rules
@@ -99,7 +99,7 @@ An attempt is one hypothesis, changed and run; rerunning the same thing is not a
 ## 5. Verify
 
 1. **Full verification.** Rerun every baseline check on the final tree; a run from earlier in the session doesn't count. Match or beat the baseline, and name any check still red.
-2. **Spec review.** Read the diff from the default branch (`git diff origin/<default>...HEAD`), not your memory of it, against each checklist item: **met** (its test seen passing), **not met**, or **manual**. Then look for **extra** (in the diff, not in the issue) and **misread** (built, but not what the criterion means). Not met or misread goes back to step 4; extra comes out.
+2. **Spec review.** Read the diff from the default branch (`git diff origin/<default>...HEAD`), not your memory of it, against each checklist item: **met** (its test seen passing), **not met**, or **manual**. Then look for **extra** (in the diff, not in the issue, beyond step 4's subtraction) and **misread** (built, but not what the criterion means). Not met or misread goes back to step 4; extra comes out.
 3. **Quality review**, a separate pass after the spec review. Give a reviewer subagent the issue link, the base SHA and the diff command, and the repo's conventions files; ask for correctness bugs, missed edge cases, departures from the repo's patterns, dead code or leftover debugging, weak tests, and docs describing changed behavior that weren't updated, each with file:line and a confidence from 0 to 100, reporting only 80 and up and nothing that predates the branch. Tell it the PR body and your reasons are claims, not evidence, and that you just ran the full verification, so it reads the diff and the code around it instead of rerunning the suite. Without subagents, make the pass yourself, re-reading the diff cold. Fix confirmed findings within scope and rerun full verification; the rest become follow-ups.
 
 Done when full verification is at or above the baseline, every item is met or manual, and the review's in-scope findings are fixed.

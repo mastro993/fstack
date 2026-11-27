@@ -1,0 +1,9 @@
+{
+  "name": "docsync",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node src/main.ts",
+    "test": "node --test src/*.test.ts"
+  }
+}
