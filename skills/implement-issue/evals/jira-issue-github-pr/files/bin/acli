@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""Stub Atlassian CLI (acli) for implement-issue evals: Jira work items in project RW on millbrook.atlassian.net.
+
+State lives in .jira-stub/state.json (place-files.sh seeds it); every call is appended to .jira-stub/calls.log
+for grading. Transitions and comments are recorded, not refused, so graders can check whether the run made them.
+"""
+import json
+import re
+import sys
+from pathlib import Path
+
+SANDBOX = Path(__file__).resolve().parent.parent
+ROOT = SANDBOX / ".jira-stub"
+ROOT.mkdir(exist_ok=True)
+STORE = ROOT / "state.json"
+SITE = "millbrook.atlassian.net"
+args = sys.argv[1:]
+with (ROOT / "calls.log").open("a") as log:
+    log.write(json.dumps(args) + "\n")
+state = json.loads(STORE.read_text())
+VALUE_FLAGS = {"--key", "-k", "--fields", "-f", "--jql", "--body", "-b", "--body-file", "-F", "--status", "-s", "--limit", "--order",
+               "--type", "--out", "--in", "--site", "--email"}
+
+
+def flag(*names):
+    found = [args[i + 1] for i, a in enumerate(args[:-1]) if a in names]
+    found += [a.split("=", 1)[1] for a in args if any(a.startswith(n + "=") for n in names if n.startswith("--"))]
+    return found[-1] if found else None
+
+
+def positional(after):
+    rest = args[after:]
+    skip = False
+    for a in rest:
+        if skip:
+            skip = False
+        elif a in VALUE_FLAGS:
+            skip = True
+        elif not a.startswith("-"):
+            return a
+    return None
+
+
+def item(key):
+    key = (key or "").rstrip("/").rsplit("/", 1)[-1].upper()
+    found = next((i for i in state["issues"] if i["key"] == key), None)
+    if not found:
+        sys.exit(f"✗ Error: work item {key!r} does not exist or you do not have permission to see it.")
+    return found
+
+
+def status_json(i):
+    cat = {"Done": "done", "In Progress": "indeterminate"}.get(i["statusCategory"], "new")
+    return {"name": i["status"], "statusCategory": {"key": cat, "name": i["statusCategory"]}}
+
+
+def links_json(i):
+    out = []
+    for n, l in enumerate(i["links"]):
+        other = item(l["key"])
+        side = "inwardIssue" if l["direction"] == "inward" else "outwardIssue"
+        out.append({"id": str(10100 + n), "type": {"name": l["type"], "inward": "is blocked by", "outward": "blocks"},
+                    side: {"key": other["key"], "fields": {"summary": other["summary"], "status": status_json(other)}}})
+    return out
+
+
+def comments_json(i):
+    return [{"id": str(20000 + n), "author": {"displayName": c["author"]}, "body": c["body"]} for n, c in enumerate(i["comments"])]
+
+
+def item_json(i):
+    return {"key": i["key"], "self": f"https://{SITE}/rest/api/3/issue/{i['key']}",
+            "fields": {"summary": i["summary"], "description": i["description"], "status": status_json(i),
+                       "issuetype": {"name": i["type"]}, "labels": i["labels"], "issuelinks": links_json(i),
+                       "subtasks": [], "parent": None, "comment": {"comments": comments_json(i), "total": len(i["comments"])},
+                       "attachment": []}}
+
+
+def output(data):
+    print(json.dumps(data, indent=2))
+
+
+def search(jql):
+    m = re.search(r'linkedIssues\(\s*"?([A-Z]+-\d+)"?\s*(?:,\s*"([^"]+)")?\s*\)', jql, re.I)
+    if m:
+        base = item(m.group(1))
+        wanted = (m.group(2) or "").lower()
+        keys = [l["key"] for l in base["links"] if not wanted or (wanted == "is blocked by") == (l["direction"] == "inward")]
+    else:
+        keys = re.findall(r"[A-Z]+-\d+", jql) or [i["key"] for i in state["issues"]]
+    found = [item(k) for k in keys]
+    if re.search(r"statusCategory\s*(!=|not in)\s*\(?\s*\"?Done", jql, re.I):
+        found = [i for i in found if i["statusCategory"] != "Done"]
+    return found
+
+
+cmd = args[:3]
+if "--help" in args or "-h" in args:
+    print(f"acli stub: help for `acli {' '.join(a for a in args if not a.startswith('-'))}` is not available in this sandbox")
+elif args[:1] in (["--version"], ["version"]):
+    print("acli version 1.3.4-stable")
+elif cmd == ["jira", "auth", "status"]:
+    print(f"✓ Authenticated\n  Site: {SITE}\n  Email: volunteer@millbrook.org\n  Authentication Type: oauth")
+elif cmd == ["jira", "workitem", "view"]:
+    i = item(positional(3) or flag("--key", "-k"))
+    if "--json" in args:
+        output(item_json(i))
+    else:
+        print(f"Key: {i['key']}\nType: {i['type']}\nSummary: {i['summary']}\nStatus: {i['status']}\nLabels: {', '.join(i['labels'])}\n"
+              f"Description:\n{i['description']}")
+elif args[:4] == ["jira", "workitem", "comment", "list"]:
+    i = item(flag("--key", "-k") or positional(4))
+    if "--json" in args:
+        output({"comments": comments_json(i)})
+    else:
+        print("\n\n".join(f"{c['author']}:\n{c['body']}" for c in i["comments"]) or "No comments")
+elif args[:4] == ["jira", "workitem", "comment", "create"]:
+    i = item(flag("--key", "-k"))
+    body = flag("--body", "-b") or (Path(flag("--body-file", "-F")).read_text() if flag("--body-file", "-F") else "")
+    i["comments"].append({"author": "Readwell volunteer", "body": body})
+    STORE.write_text(json.dumps(state, indent=2))
+    print(f"✓ Comment added to {i['key']}")
+elif args[:4] == ["jira", "workitem", "link", "list"]:
+    i = item(flag("--key", "-k") or positional(4))
+    if "--json" in args:
+        output(links_json(i))
+    else:
+        for l in links_json(i):
+            side = "inwardIssue" if "inwardIssue" in l else "outwardIssue"
+            label = l["type"]["inward"] if side == "inwardIssue" else l["type"]["outward"]
+            print(f"{i['key']} {label} {l[side]['key']} ({l[side]['fields']['status']['name']})")
+elif cmd == ["jira", "workitem", "search"]:
+    found = search(flag("--jql") or "")
+    if "--json" in args:
+        output([item_json(i) for i in found])
+    else:
+        print("\n".join(f"{i['key']}\t{i['status']}\t{i['summary']}" for i in found) or "No work items found")
+elif cmd == ["jira", "workitem", "transition"]:
+    i = item(flag("--key", "-k") or positional(3))
+    i["status"] = flag("--status", "-s") or i["status"]
+    STORE.write_text(json.dumps(state, indent=2))
+    print(f"✓ Transitioned {i['key']} to {i['status']}")
+else:
+    sys.exit(f"acli stub: `acli {' '.join(args[:3])}` is not available in this sandbox (Jira work items: view, search, comments, links, transition)")

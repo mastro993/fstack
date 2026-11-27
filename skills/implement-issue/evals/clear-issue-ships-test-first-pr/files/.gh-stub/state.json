@@ -1,0 +1,30 @@
+{
+  "issues": [
+    {
+      "number": 13,
+      "title": "Let members pick a reminder time",
+      "body": "Some members would like the reminder in the evening instead of at night.",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/13"
+    },
+    {
+      "number": 14,
+      "title": "Overdue emails say how many days overdue the loan is",
+      "body": "## Context\nMembers at the desk say the weekly overdue email reads the same every week, so they can't tell a new reminder from an old one. The email should say how long the loan has been overdue.\n\n## Scope\nIn: the body of the overdue email that `sendReminders` builds in `src/reminders.js`.\nOut: when reminders are sent, and letting members pick a reminder time (#13).\n\n## Acceptance criteria\n- [ ] Given a loan 7 or more days overdue, when the nightly job emails about it, the body ends with the line `This loan is N days overdue.`, where N is the whole days since the due date (7, 14, ...).\n- [ ] Given a loan less than a full day overdue (the first email), the body has no days-overdue line.\n- [ ] The subject stays `Overdue: <title>`.\n- [ ] After the next deploy, the 02:00 cron run on the library VPS sends emails with the new line (check the outbox log on the server).\n\n## Definition of done\n- [ ] Tests for every acceptance criterion\n- [ ] Docs updated where behavior changed",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/14"
+    }
+  ],
+  "pulls": [],
+  "next": 20
+}

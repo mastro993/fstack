@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: unmerged-dependency-blocks
+expected_outcome: |
+  Issue #17 is blocked by #16, which is still open; its PR #18 (branch 16-reminder-preference) is an
+  unmerged draft. The run finds the dependency (the issue's Dependencies section or the native blocked-by
+  link), changes no code, does not build on #18's branch, opens no PR, and replies that #17 waits on #16
+  and PR #18 merging, ending with STATUS: BLOCKED.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""Stub glab CLI for implement-issue evals: issues and merge requests for gitlab.com/millbrook/readwell.
+
+`git push` to origin lands in ./remote/readwell.git (see place-files.sh). Nothing merges on its own.
+State lives in .glab-stub/state.json (place-files.sh seeds it); every call is appended to
+.glab-stub/calls.log for grading.
+"""
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+SANDBOX = Path(__file__).resolve().parent.parent
+ROOT = SANDBOX / ".glab-stub"
+ROOT.mkdir(exist_ok=True)
+STORE = ROOT / "state.json"
+REMOTE = SANDBOX / "remote" / "readwell.git"
+PROJECT = "millbrook/readwell"
+URL = f"https://gitlab.com/{PROJECT}"
+VALUE_FLAGS = {"-F", "--output", "-R", "--repo", "-t", "--title", "-d", "--description", "--description-file", "-s", "--source-branch",
+               "-b", "--target-branch", "-l", "--label", "-a", "--assignee", "--search", "-m", "--message", "-X", "--method",
+               "-f", "--raw-field", "--field", "--jq", "-P", "--per-page", "-p", "--page", "--reviewer", "--milestone", "-i", "--related-issue"}
+args = sys.argv[1:]
+with (ROOT / "calls.log").open("a") as log:
+    log.write(json.dumps(args) + "\n")
+state = json.loads(STORE.read_text()) if STORE.exists() else {"issues": [], "mrs": [], "next_mr": 1}
+
+
+def flag(*names):
+    found = [args[i + 1] for i, a in enumerate(args[:-1]) if a in names]
+    found += [a.split("=", 1)[1] for a in args if any(a.startswith(n + "=") for n in names if n.startswith("--"))]
+    return found[-1] if found else None
+
+
+def positional():
+    rest = args[2:]
+    skip = False
+    for a in rest:
+        if skip:
+            skip = False
+        elif a in VALUE_FLAGS:
+            skip = True
+        elif not a.startswith("-"):
+            return a
+    return None
+
+
+def git(*cmd):
+    return subprocess.run(["git", f"--git-dir={REMOTE}", *cmd], capture_output=True, text=True, check=True).stdout.strip()
+
+
+def save():
+    STORE.write_text(json.dumps(state, indent=2))
+
+
+def output(data):
+    text = json.dumps(data, indent=2)
+    jq = flag("--jq")
+    if jq:
+        text = subprocess.run(["jq", "-r", jq], input=text, capture_output=True, text=True).stdout.rstrip("\n")
+    print(text)
+
+
+def json_out():
+    return (flag("-F", "--output") or "text") == "json"
+
+
+def iid_of(ref):
+    return (ref or "").lstrip("#").rstrip("/").rsplit("/", 1)[-1]
+
+
+def issue(ref):
+    found = next((i for i in state["issues"] if str(i["number"]) == iid_of(ref)), None)
+    if not found:
+        sys.exit(f"ERROR: 404 Not Found: issue {ref!r}")
+    return found
+
+
+def issue_json(i):
+    return {"iid": i["number"], "title": i["title"], "description": i["body"], "state": "opened" if i["state"] == "OPEN" else "closed",
+            "labels": i["labels"], "web_url": i["url"], "references": {"short": f"#{i['number']}", "full": f"{PROJECT}#{i['number']}"},
+            "issue_type": "issue", "epic": None, "user_notes_count": len(i["comments"])}
+
+
+def notes_json(i):
+    return [{"id": n + 1, "body": c["body"], "author": {"username": c["author"]}, "system": False} for n, c in enumerate(i["comments"])]
+
+
+def mr(ref):
+    found = next((m for m in state["mrs"] if m["source_branch"] == ref or str(m["iid"]) == iid_of(ref)), None)
+    if not found:
+        sys.exit(f"ERROR: no open merge request available for {ref!r}")
+    return found
+
+
+def current_branch():
+    try:
+        return subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
+def description():
+    path = flag("--description-file")
+    if path:
+        return sys.stdin.read() if path == "-" else Path(path).read_text()
+    return flag("-d", "--description")
+
+
+def mr_json(m):
+    closes = [i["number"] for i in state["issues"] if f"#{i['number']}" in (m["description"] or "")]
+    return dict(m, web_url=f"{URL}/-/merge_requests/{m['iid']}", references={"short": f"!{m['iid']}"}, merge_status="can_be_merged",
+                closes_issues=closes)
+
+
+cmd = args[:2]
+if "--help" in args or "-h" in args:
+    print(f"glab stub: usage for `glab {' '.join(a for a in args if not a.startswith('-'))}` is not available in this sandbox")
+elif args[:1] in (["--version"], ["version"]):
+    print("glab 1.133.0 (2026-11-25)")
+elif cmd == ["auth", "status"]:
+    print("gitlab.com\n  ✓ Logged in to gitlab.com as millbrook-volunteer (keyring)\n  ✓ Git operations for gitlab.com configured to use https protocol.")
+elif cmd == ["repo", "view"]:
+    data = {"path_with_namespace": PROJECT, "default_branch": "main", "web_url": URL}
+    output(data) if json_out() else print(f"{PROJECT}\n\n{URL}\ndefault branch: main")
+elif cmd == ["issue", "list"]:
+    issues = [i for i in state["issues"] if i["state"] == "OPEN" or "--all" in args or "-A" in args]
+    output([issue_json(i) for i in issues]) if json_out() else print("\n".join(f"#{i['number']}\t{i['title']}\t({', '.join(i['labels'])})" for i in issues))
+elif cmd in (["issue", "view"], ["issue", "show"]):
+    i = issue(positional())
+    if json_out():
+        data = issue_json(i)
+        if "--comments" in args or "-c" in args:
+            data["notes"] = notes_json(i)
+        output(data)
+    else:
+        print(f"title:\t{i['title']}\nstate:\t{'open' if i['state'] == 'OPEN' else 'closed'}\nlabels:\t{', '.join(i['labels'])}\n"
+              f"iid:\t{i['number']}\nurl:\t{i['url']}\n--\n{i['body']}")
+        if "--comments" in args or "-c" in args:
+            for c in i["comments"]:
+                print(f"\n--\n{c['author']} commented\n{c['body']}")
+elif cmd == ["issue", "note"]:
+    i = issue(positional())
+    i["comments"].append({"author": "millbrook-volunteer", "body": flag("-m", "--message") or ""})
+    save()
+    print(f"{i['url']}#note_{len(i['comments'])}")
+elif cmd == ["mr", "create"]:
+    head = flag("-s", "--source-branch") or current_branch()
+    try:
+        git("rev-parse", f"refs/heads/{head}")
+    except subprocess.CalledProcessError:
+        sys.exit(f"ERROR: source branch {head!r} does not exist on the remote; push it first")
+    title = flag("-t", "--title")
+    if not title and "--fill" not in args and "-f" not in args:
+        sys.exit("--title or --fill required for non-interactive mode")
+    draft = "--draft" in args or "--wip" in args
+    title = title or "Draft MR"
+    if draft and not title.lower().startswith(("draft:", "[draft]", "(draft)")):
+        title = f"Draft: {title}"
+    m = {"iid": state["next_mr"], "title": title, "description": description() or "", "source_branch": head,
+         "target_branch": flag("-b", "--target-branch") or "main", "draft": title.lower().startswith(("draft:", "[draft]", "(draft)")), "state": "opened"}
+    state["next_mr"] += 1
+    state["mrs"].append(m)
+    save()
+    print(f"Creating merge request for {head} into {m['target_branch']} in {PROJECT}\n\n!{m['iid']} {m['title']} ({head})\n {URL}/-/merge_requests/{m['iid']}")
+elif cmd == ["mr", "list"]:
+    found = [m for m in state["mrs"] if (m["state"] == "opened" or "-A" in args or "--all" in args)
+             and (not flag("-s", "--source-branch") or m["source_branch"] == flag("-s", "--source-branch"))
+             and (not flag("--search") or flag("--search").lstrip("#").lower() in f"{m['title']} {m['description']}".lower())]
+    output([mr_json(m) for m in found]) if json_out() else print("\n".join(f"!{m['iid']}\t{m['title']}\t({m['target_branch']}) ← ({m['source_branch']})" for m in found) or "No merge requests match your search")
+elif cmd in (["mr", "view"], ["mr", "show"]):
+    m = mr(positional() or current_branch())
+    output(mr_json(m)) if json_out() else print(f"title:\t{m['title']}\nstate:\t{m['state']}\ndraft:\t{str(m['draft']).lower()}\n"
+                                                 f"source:\t{m['source_branch']}\nurl:\t{URL}/-/merge_requests/{m['iid']}\n--\n{m['description']}")
+elif cmd == ["mr", "update"]:
+    m = mr(positional() or current_branch())
+    text = description()
+    if text is not None:
+        m["description"] = text
+    if flag("-t", "--title"):
+        m["title"] = flag("-t", "--title")
+    if "--draft" in args:
+        m["draft"] = True
+        if not m["title"].lower().startswith("draft:"):
+            m["title"] = f"Draft: {m['title']}"
+    if "-r" in args or "--ready" in args:
+        m["draft"] = False
+        m["title"] = m["title"].split(":", 1)[1].strip() if m["title"].lower().startswith("draft:") else m["title"]
+    save()
+    print(f"- Updating merge request !{m['iid']}\n✓ updated\n{URL}/-/merge_requests/{m['iid']}")
+elif cmd == ["mr", "merge"]:
+    sys.exit("glab stub: merging is not available in this sandbox")
+elif args[:1] == ["api"]:
+    path = next(a for a in args[1:] if not a.startswith("-") and args[args.index(a) - 1] not in VALUE_FLAGS).lstrip("/")
+    path = path.replace(":fullpath", PROJECT).replace(":id", PROJECT).replace("millbrook%2Freadwell", PROJECT).split("?")[0]
+    parts = path.split("/")
+    if parts[:1] != ["projects"] or "/".join(parts[1:3]) != PROJECT:
+        sys.exit(f"glab stub: `glab api {path}` is not available in this sandbox")
+    rest = parts[3:]
+    if rest[:1] == ["issues"] and len(rest) >= 2:
+        i = issue(rest[1])
+        tail = "/".join(rest[2:])
+        if not tail:
+            output(issue_json(i))
+        elif tail == "links":
+            output(i.get("links", []))
+        elif tail == "notes":
+            output(notes_json(i))
+        elif tail in ("related_merge_requests", "closed_by"):
+            output([mr_json(m) for m in state["mrs"] if f"#{i['number']}" in (m["description"] or "")])
+        else:
+            sys.exit(f"glab stub: `glab api {path}` is not available in this sandbox")
+    elif rest[:1] == ["merge_requests"] and len(rest) == 2:
+        m = mr(rest[1])
+        method = (flag("-X", "--method") or "GET").upper()
+        if method == "PUT":
+            for a in args:
+                if a.startswith("description="):
+                    value = a.split("=", 1)[1]
+                    m["description"] = Path(value[1:]).read_text() if value.startswith("@") else value
+            save()
+        output(mr_json(m))
+    elif rest[:1] == ["merge_requests"]:
+        output([mr_json(m) for m in state["mrs"]])
+    else:
+        sys.exit(f"glab stub: `glab api {path}` is not available in this sandbox")
+else:
+    sys.exit(f"glab stub: `glab {' '.join(args[:2])}` is not available in this sandbox (issues and merge requests only)")

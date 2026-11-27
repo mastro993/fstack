@@ -1,0 +1,54 @@
+{
+  "issues": [
+    {
+      "key": "RW-12",
+      "summary": "Move the overdue email text into reminders.js",
+      "description": "Done in the spring cleanup.",
+      "status": "Done",
+      "statusCategory": "Done",
+      "type": "Task",
+      "labels": [],
+      "comments": [],
+      "links": [],
+      "url": "https://millbrook.atlassian.net/browse/RW-12"
+    },
+    {
+      "key": "RW-13",
+      "summary": "Let members pick a reminder time",
+      "description": "Some members would like the reminder in the evening instead of at night.",
+      "status": "To Do",
+      "statusCategory": "To Do",
+      "type": "Story",
+      "labels": [],
+      "comments": [],
+      "links": [],
+      "url": "https://millbrook.atlassian.net/browse/RW-13"
+    },
+    {
+      "key": "RW-14",
+      "summary": "Overdue emails say how many days overdue the loan is",
+      "description": "## Context\nMembers at the desk say the weekly overdue email reads the same every week, so they can't tell a new reminder from an old one. The email should say how long the loan has been overdue.\n\n## Scope\nIn: the body of the overdue email that `sendReminders` builds in `src/reminders.js`.\nOut: when reminders are sent, and letting members pick a reminder time (RW-13).\n\n## Acceptance criteria\n- [ ] Given a loan 7 or more days overdue, when the nightly job emails about it, the body ends with the line `This loan is N days overdue.`, where N is the whole days since the due date (7, 14, ...).\n- [ ] Given a loan less than a full day overdue (the first email), the body has no days-overdue line.\n- [ ] The subject stays `Overdue: <title>`.\n- [ ] After the next deploy, the 02:00 cron run on the library VPS sends emails with the new line (check the outbox log on the server).\n\n## Definition of done\n- [ ] Tests for every acceptance criterion\n- [ ] Docs updated where behavior changed\n\n## Dependencies\nBlocked by: RW-12",
+      "status": "To Do",
+      "statusCategory": "To Do",
+      "type": "Story",
+      "labels": [
+        "reminders"
+      ],
+      "comments": [
+        {
+          "author": "Asha Devi",
+          "body": "Agreed with the desk volunteers: keep the line short, exactly as in the criteria."
+        }
+      ],
+      "links": [
+        {
+          "type": "Blocks",
+          "direction": "inward",
+          "label": "is blocked by",
+          "key": "RW-12"
+        }
+      ],
+      "url": "https://millbrook.atlassian.net/browse/RW-14"
+    }
+  ]
+}

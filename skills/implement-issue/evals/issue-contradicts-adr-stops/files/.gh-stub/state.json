@@ -1,0 +1,30 @@
+{
+  "issues": [
+    {
+      "number": 13,
+      "title": "Let members pick a reminder time",
+      "body": "Some members would like the reminder in the evening instead of at night.",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/13"
+    },
+    {
+      "number": 19,
+      "title": "Allow a second renewal",
+      "body": "## Context\nMembers keep asking for one more renewal on long books. ADR 0003 already allows two renewals per loan; the code still stops at one (`MAX_RENEWALS` in `src/loans.js`), so it is out of date with the ADR.\n\n## Acceptance criteria\n- [ ] A loan with no hold waiting can be renewed twice; a third renewal is refused with reason `renewal-limit`.\n- [ ] A waiting hold still blocks every renewal (ADR 0002).",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/19"
+    }
+  ],
+  "pulls": [],
+  "next": 25
+}
