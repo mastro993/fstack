@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: post-history-regression
+expected_outcome: |
+  PR #40 rewrites the monthly export as a generator. The review reports that it drops the voided-invoice guard
+  that "Skip voided invoices in the monthly export (#31)" added, and deletes that fix's test, so voided invoices reach
+  the accountant again (PR #31's review comment says they must never); and that counting rows consumes the generator,
+  so the CSV gets a header and no rows. Asked to post, it posts one review to PR #40 with event COMMENT, never APPROVE
+  or REQUEST_CHANGES, with inline comments on billing/export.py that carry the code-review marker, and writes a valid
+  review-findings.json.
+context:
+  scaffold_script: place-files.sh

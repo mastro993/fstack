@@ -1,0 +1,21 @@
+{
+  "repo": "evals/billing",
+  "default_branch": "main",
+  "prs": {
+    "40": {
+      "title": "Stream the monthly export",
+      "body": "The March export ran out of memory on the big tenant. This streams rows instead of building the whole CSV first. The old voided-invoice test went with the rewrite; the new test covers the month filter.",
+      "state": "OPEN",
+      "draft": false,
+      "author": "export-dev",
+      "base": "main",
+      "head": "perf/stream-export"
+    }
+  },
+  "issues": {},
+  "history_comments": {
+    "31": [
+      {"user": "finance-lead", "path": "billing/export.py", "line": 12, "body": "Thanks. For the record: voided invoices must never reach the accountant's export. They are legally void and the accountant files whatever is in that CSV (FIN-88)."}
+    ]
+  }
+}

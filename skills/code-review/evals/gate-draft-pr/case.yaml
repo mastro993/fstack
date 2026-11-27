@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: gate-draft-pr
+expected_outcome: |
+  PR #7 is a draft. The review stops at the gate in one line: the PR is a draft, so it wasn't reviewed, and
+  the user can ask to review it anyway. It spawns no finder or verifier, reports no findings, and posts nothing.
+context:
+  scaffold_script: place-files.sh

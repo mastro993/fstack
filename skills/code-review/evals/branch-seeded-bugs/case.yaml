@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: branch-seeded-bugs
+expected_outcome: |
+  The checkout is on feat/csv-export, clean, three commits ahead of main. The review pins main..HEAD and,
+  with no PR or issue, runs without a spec pass. It reports the three bugs the branch introduces: paginate() became
+  0-based while web.list_invoices, which the branch didn't touch, still passes 1-based pages, so the web UI never
+  shows the first 20 invoices; export_csv's `_written=set()` default keeps ids between calls, so a second export
+  skips everything the first wrote; and sorting by paid_at raises TypeError once an unpaid invoice (paid_at None)
+  is in the list. It leaves alone format_cents' handling of negative cents (pre-existing, and invoices can't be
+  negative), days_overdue going negative (its only caller passes overdue invoices), and the unused `import os`
+  (ruff reports it in CI). It changes no file and writes a valid review-findings.json.
+context:
+  scaffold_script: place-files.sh

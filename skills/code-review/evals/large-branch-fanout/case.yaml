@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: large-branch-fanout
+expected_outcome: |
+  feat/rate-limit changes about 230 lines of code, so the review fans out to the five finders. It reports the
+  three bugs the branch introduces: the middleware passes Date.now() milliseconds to a TokenBucket that counts
+  seconds, so buckets refill 1000 times too fast and nothing is limited; buckets are keyed on the raw
+  X-Forwarded-For header instead of clientIp(), so any client spoofs a fresh key and is never limited; and after
+  answering 429 the middleware still calls next(), so the handler runs anyway. It leaves alone the pre-existing
+  Content-Length bug in send(), the unused `started` variable (ESLint reports it in CI), and missing JSDoc or test
+  coverage (REVIEW.md asks reviewers to skip those).
+context:
+  scaffold_script: place-files.sh

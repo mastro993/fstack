@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: pr-spec-and-rules
+expected_outcome: |
+  PR #14 closes issue #12, whose four acceptance criteria the review checks in a spec pass separate from the
+  standards pass. It reports: the same coupon can be applied twice (criterion 4, no CouponAlreadyApplied); find()
+  rejects a coupon on its expires_on day with `<=`, though the issue says it still works that day (criterion 3);
+  discount_cents computes the percentage with float math and round() rather than rounding down in integer cents
+  (criterion 1 and CLAUDE.md's integer-cents rule, quoted); and preview_coupon computes a discount in the handler,
+  against CLAUDE.md (quoted), and ignores percentage coupons. It doesn't flag describe()'s float, which carries the
+  `# money: display-only` opt-out CLAUDE.md allows. It posts nothing to the PR and writes a valid review-findings.json.
+context:
+  scaffold_script: place-files.sh
