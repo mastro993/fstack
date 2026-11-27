@@ -5,11 +5,11 @@ expected_outcome: |
   "outside diff range" comment, and review-findings.json (three findings, reviewed at the PR's first
   commit). The run works in report mode: it verifies each claim at HEAD and writes
   resolution-plan.json and resolution-report.md without editing code or posting anything. Expected
-  verdicts: assist-bot's returned-loan claim and finding F1 are one item, accepted; F2 (glossary: avoid
+  verdicts: assist-bot's returned-loan claim and finding F1 are one item, accepted; F3 (glossary: avoid
   "late") accepted and grouped with it, since both change isAlmostLate; review-bot's "addDays mutates
   now" rejected (db.js copies the date); volunteer-dev's SMS request rejected under ADR 0001; review-bot's
   configurable lead time rejected as unneeded; review-bot's arrow-function comment rejected as out of
-  scope (untouched lines); F3 rejected because the second commit already fixed it; desk-lead's opt-out
+  scope (untouched lines); F2 rejected because the second commit already fixed it; desk-lead's opt-out
   question goes to the user as needs-human with options and costs.
 context:
   scaffold_script: place-files.sh
