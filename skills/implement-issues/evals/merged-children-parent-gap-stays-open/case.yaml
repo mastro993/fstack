@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: merged-children-parent-gap-stays-open
+expected_outcome: |
+  Every sub-issue of parent #40 is closed with its PR merged (#43 by #39, #41 by #50, #42 by #51), so
+  there is no batch left to run. The run checks #40's own criteria against the merged code: subject, days
+  overdue, and the Monday digest are met, but the README has no "Reminder emails" section. It does not
+  close #40, starts no runner, opens no PR, and edits no file. It reports the unmet criterion and offers to
+  file it as a new issue (through create-issues) rather than building it.
+context:
+  scaffold_script: place-files.sh

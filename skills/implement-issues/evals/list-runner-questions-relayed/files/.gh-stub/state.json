@@ -1,0 +1,32 @@
+{
+  "issues": [
+    {
+      "number": 44,
+      "title": "Make the overdue email friendlier",
+      "body": "Members say the overdue email sounds cold. It should be friendlier and clearer.",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/44"
+    },
+    {
+      "number": 45,
+      "title": "Overdue emails say how many days overdue the loan is",
+      "body": "## Dependencies\nBlocked by #44: the line goes into the reworded email body.\n\n## Scope\nIn: the body of the overdue email that `sendReminders` builds in `src/reminders.js`.\n\n## Acceptance criteria\n- [ ] Given a loan 7 or more days overdue, when the nightly job emails about it, the body ends with the line `This loan is N days overdue.`, where N is the whole days since the due date.\n- [ ] Given a loan less than a full day overdue (the first email), the body has no days-overdue line.\n\n## Definition of done\n- [ ] Tests for every acceptance criterion",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [
+        44
+      ],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/45"
+    }
+  ],
+  "pulls": [],
+  "next": 50
+}

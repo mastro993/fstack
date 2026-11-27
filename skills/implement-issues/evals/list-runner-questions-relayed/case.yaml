@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: list-runner-questions-relayed
+expected_outcome: |
+  A plain list, no parent. #45 is blocked by #44, so batch 1 is #44 and batch 2 is #45. The user said to
+  just start, so a runner builds #44 with the implement-issue skill. #44 has no checkable acceptance
+  criteria ("friendlier and clearer"), so the runner stops with NEEDS_CONTEXT and proposes criteria. The run
+  puts those questions to the user, keeps batch 1 open, and does not start #45. No PR is opened and no file
+  changes.
+context:
+  scaffold_script: place-files.sh

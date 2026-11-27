@@ -1,6 +1,6 @@
 ---
 name: implement-issue
-description: Use when the user asks to implement, build, fix, resume, or work on one specific issue, ticket, or work item named by number, key, or link, on any tracker (GitHub, GitLab, Jira, Linear, Azure Boards, and others), such as "implement #42", "pick up PROJ-118", "work on https://linear.app/acme/issue/ENG-7", "fix issue 118 and open a PR", "carry on with #42", or another skill's handoff of an issue to build.
+description: Use when the user asks to implement, fix, or resume one specific issue or ticket on any tracker, such as "implement #42", "pick up PROJ-118", "carry on with #42", or when another skill hands off one issue to build.
 compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the test-driven-development skill from the same plugin (pr-ship, when the user asks to merge a GitHub PR). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them.
 ---
 
@@ -36,7 +36,7 @@ Stop before anything else when:
 
 - **No acceptance criteria**, or none a person could check ("make it clearer", "clean up X"): `NEEDS_CONTEXT`. Say what's missing and propose criteria you'd use, each checkable, so the author is one edit from a startable issue. Don't build on your own proposal: what gets built is the author's call.
 - **No way to verify**: no test runner and no observable outcome you or a person could check. `NEEDS_CONTEXT`, saying what would make it checkable.
-- **Not one PR of work**: the issue is closed or done, or it is a parent (an epic, a tracking issue) whose work lives in its children. Ask which issue to take.
+- **Not one PR of work**: the issue is closed or done; say so and ask which issue to take. A parent (an epic, a tracking issue) whose work lives in its children goes to the implement-issues skill, which works through them.
 
 Done when you hold the criteria, the scope (in and out), and every linked doc and named file.
 
