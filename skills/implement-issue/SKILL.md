@@ -28,7 +28,7 @@ Every single-issue run ends with exactly one status, as the reply's last line: `
 
 A later session resumes from the branch, not from this conversation. Each checklist item lands as its own commit whose subject names the criterion, so `git log` is the progress record; each decision rides in the body of the next commit as `Decision: <what> — <why>`.
 
-**Resuming.** Look for this issue's branch: a local or remote branch with the issue reference in its name, or the head branch of an open pull request linked to the issue (trackers.md's Existing PR row). If there is one, check it out and read `git log <default>..HEAD` with the commit bodies; trust it over any memory of the work. Decisions recorded there are settled. Run the baseline (step 2), rerun each committed item's test, and continue from the first criterion without a passing committed test.
+**Resuming.** Look for this issue's branch: a local or remote branch with the issue reference in its name, or the head branch of an open pull request linked to the issue (trackers.md's Existing PR row). If there is one, check it out and read `git log <default>..HEAD` with the commit bodies; trust it over any memory of the work. Decisions recorded there are settled. Run the baseline (step 2), rerun each committed item's test, and continue from the first automated criterion without a passing committed test.
 
 ## 1. Find, read, and gate
 
@@ -47,7 +47,7 @@ Done when you hold the criteria, the scope (in and out), and every linked doc an
 
 ## 2. Check the ground
 
-- **Dependencies.** Every issue this one is blocked by (its Dependencies section, "after #n" or "depends on PROJ-7" in the text, and the tracker's native blocked-by links) must be closed or done, with its work merged into the default branch: find its PR the way trackers.md finds an existing one, filtered to merged. An open one is `BLOCKED`, naming it; never build on its unmerged branch. One closed as won't-do or cancelled may have left its work undone: the drift check below settles whether the code has it.
+- **Dependencies.** Every issue this one is blocked by (its Dependencies section, "after #n" or "depends on PROJ-7" in the text, and the tracker's native blocked-by links) must be closed or done, with its work merged into the default branch: a merged PR (found the way trackers.md finds an existing one, filtered to merged) or commits on the default branch carrying its reference. An open one is `BLOCKED`, naming it; never build on its unmerged branch. One closed as won't-do or cancelled may have left its work undone: the drift check below settles whether the code has it.
 - **Drift.** Check each thing the issue assumes (a file, function, behavior, data shape, documented decision) against the up-to-date default branch. Where they disagree, stop with `NEEDS_CONTEXT` and this report:
 
   ```
@@ -94,7 +94,7 @@ A precise stop beats a branch built on a guess. When one fires, leave the branch
 | The issue and the code or docs disagree | the drift report (step 2) | `NEEDS_CONTEXT` |
 | A breaking change (public API, schema, config, CLI, behavior other callers rely on) or a change outside the issue's scope | the change, why the criteria need it, the options with your recommendation | `NEEDS_CONTEXT` |
 | The same failure after two different attempts | the exact error, each attempt and why it failed, your best hypothesis | `BLOCKED` |
-| A dependency isn't merged | the issue and its PR | `BLOCKED` |
+| A dependency isn't merged | the issue, and its open PR or branch if it has one | `BLOCKED` |
 
 An attempt is one hypothesis, changed and run; rerunning the same thing is not a second attempt. A small ambiguity the code settles is not a stop: decide it and record it as a Decision.
 
