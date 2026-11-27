@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: gitlab-issue-read-with-glab
+expected_outcome: |
+  readwell lives on GitLab (the git remote is gitlab.com/millbrook/readwell) and #14 is a GitLab issue with
+  clear criteria. The run reads it with glab (with comments), checks it has no blocking links, assigns it to
+  the account glab is signed in as, builds it test-first on a branch named with 14, touches only
+  src/reminders.js and the tests, and commits there. It never reaches for GitHub, pushes nothing, and opens
+  no merge request. The reply names the branch, lists the VPS outbox check as manual, and ends with
+  STATUS: DONE.
+context:
+  scaffold_script: place-files.sh

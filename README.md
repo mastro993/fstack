@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.16.1-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.17.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -162,7 +162,7 @@ The skills hand work to each other, so install each one together with every skil
 | feature-design | domain-driven-design, ux-brainstorm, test-driven-development, pr-open, pr-babysit, resolve-merge-conflicts |
 | ux-brainstorm | domain-driven-design, pr-open, pr-babysit, resolve-merge-conflicts |
 | design-system | ux-brainstorm, domain-driven-design, pr-open, pr-babysit, resolve-merge-conflicts |
-| implement-issue | implement, test-driven-development, create-issues, pr-open, pr-ship, pr-babysit, resolve-merge-conflicts |
+| implement-issue | implement, test-driven-development |
 | create-issues | pr-open, pr-babysit, resolve-merge-conflicts |
 | implement | test-driven-development |
 | pr-ship | pr-open, pr-babysit, resolve-merge-conflicts |

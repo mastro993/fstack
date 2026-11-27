@@ -4,8 +4,8 @@ expected_outcome: |
   Parent #40 has three sub-issues: #43 is closed with its PR #39 merged, #41 has no blockers, and #42 is
   blocked by #41. Threads aren't available, so every batch is one issue: batch 1 is #41, batch 2 is #42,
   and #43 is reported as done. The user pre-approved the plan, so the run starts batch 1 right away: one
-  runner (a subagent, or inline) builds #41 with the implement-issue skill and opens one PR with Closes #41.
-  The run then stops: it does not start #42, does not merge, and replies with the batch report, the PR link,
-  and that batch 2 (#42) starts once that PR is merged and the user says go.
+  runner (a subagent, or inline) builds #41 with the implement-issue skill on its own branch, committed and
+  not pushed. The run then stops: it does not start #42, opens no PR, does not merge, and replies with the
+  batch report, #41's branch, and that batch 2 (#42) starts once #41's work is merged and the user says go.
 context:
   scaffold_script: place-files.sh
