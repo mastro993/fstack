@@ -1,7 +1,7 @@
 ---
 name: test-driven-development
-description: Use when writing code that adds or changes behavior (building a feature, fixing a bug, changing a business rule) or when the user asks for TDD, test-first, red-green-refactor, or tests alongside a change.
-compatibility: Needs the project's test runner. The fstack feature-design skill hands its implementation sessions to it.
+description: Use when the user asks for TDD, test-first, red-green-refactor, or tests alongside a change.
+compatibility: Needs the project's test runner. The fstack feature-design, implement-issue, and implement skills hand test-first work to it.
 ---
 
 # Test-driven development

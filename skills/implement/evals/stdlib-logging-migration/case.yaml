@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: stdlib-logging-migration
+expected_outcome: |
+  The run migrates one file by hand, then writes a small codemod (for example scripts/migrate_logging.py,
+  AST- or regex-based), proves it on that file, and runs it over jobs/: every log() and log.log() call becomes
+  a call on a module-level logger = logging.getLogger(__name__) at the matching level (warn becomes warning,
+  fatal becomes critical), keyword and multi-line calls included, and the computed level in retry.py keeps
+  choosing warning or error at runtime (by hand if the tool skips it). It reruns the tool to show a second run
+  changes nothing, keeps it in the repo for the reports and billing-v2 branches, and says how to run it.
+  jobs/log.py and tests/test_log.py are deleted with no shim; the invoices test asserts the warning with
+  assertLogs instead of patching log. jobs/cli.py configures logging once, so a job run by hand still prints
+  its messages to stderr. The unittest suite passes.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: parallel-sync-progress
+expected_outcome: |
+  The run finds that the four workers each read, modify, and rewrite the one shared state/progress.json,
+  so concurrent updates overwrite each other (finished ids go missing) and overlapping writes can leave
+  invalid JSON that loadProgress reads as empty, which restarts the sync from zero. Instead of putting a
+  lock or a write queue in front of that file, it gives each document its own record (a marker file per
+  document, or the saved out/<id>.md itself, written to a temp path and renamed) and has the restart read
+  those, so a sync restarted at any point skips every document already saved. A test runs sync with more
+  than one worker and checks that a restart fetches nothing already saved. The README's description of
+  progress tracking matches the new mechanism. `npm test` passes.
+context:
+  scaffold_script: place-files.sh
