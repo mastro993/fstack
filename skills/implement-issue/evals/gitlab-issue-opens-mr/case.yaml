@@ -2,8 +2,8 @@ schema_version: "1.1"
 name: gitlab-issue-opens-mr
 expected_outcome: |
   readwell lives on GitLab (the git remote is gitlab.com/millbrook/readwell) and #14 is a GitLab issue with
-  clear criteria. The run reads it with glab (with comments), checks it has no blocking links, builds it
-  test-first on a branch named with 14, touches only src/reminders.js and the tests, pushes, and opens one
+  clear criteria. The run reads it with glab (with comments), checks it has no blocking links, assigns it to
+  the account glab is signed in as, builds it test-first on a branch named with 14, touches only src/reminders.js and the tests, pushes, and opens one
   merge request with glab whose description closes the issue the GitLab way (Closes #14) and carries the
   criteria checklist: the automated criteria ticked with their tests, the VPS outbox check an unticked manual
   check, plus verification, deviations, and follow-ups. It doesn't try to open a GitHub pull request. The reply

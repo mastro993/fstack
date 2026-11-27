@@ -73,7 +73,7 @@ def positional():
 
 VALUE_FLAGS = {"--json", "--jq", "-q", "--body", "-b", "--body-file", "-F", "--title", "-t", "--base", "-B", "--head", "-H",
                "--state", "-s", "--search", "-S", "--label", "-l", "--limit", "-L", "--name", "-n", "--repo", "-R", "--add-label",
-               "--comment", "-c", "--reason", "-r"}
+               "--comment", "-c", "--reason", "-r", "--add-assignee", "--remove-assignee"}
 
 
 def current_branch():
@@ -93,6 +93,7 @@ def issue_json(issue):
     children = [ref(n) for n in issue.get("subIssues", [])]
     done = sum(c["state"] == "CLOSED" for c in children)
     return select(dict(issue, id=issue["number"] + 1000, closedByPullRequestsReferences=closing,
+                       assignees=[{"login": a} for a in issue.get("assignees", [])],
                        parent=ref(issue["parent"]) if issue.get("parent") else None,
                        subIssues={"nodes": children, "totalCount": len(children)},
                        subIssuesSummary={"total": len(children), "completed": done,
@@ -164,6 +165,11 @@ elif cmd == ["issue", "edit"]:
     if flag("--body", "-b", "--body-file", "-F"):
         issue["body"] = body()
     issue["labels"] += flag("--add-label", many=True)
+    for login in flag("--add-assignee", many=True):
+        for name in login.split(","):
+            name = "millbrook-volunteer" if name == "@me" else name
+            if name not in issue.setdefault("assignees", []):
+                issue["assignees"].append(name)
     save()
     print(issue["url"])
 elif cmd == ["issue", "develop"]:

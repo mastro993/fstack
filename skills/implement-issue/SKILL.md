@@ -37,6 +37,7 @@ Stop before anything else when:
 - **No acceptance criteria**, or none a person could check ("make it clearer", "clean up X"): `NEEDS_CONTEXT`. Say what's missing and propose criteria you'd use, each checkable, so the author is one edit from a startable issue. Don't build on your own proposal: what gets built is the author's call.
 - **No way to verify**: no test runner and no observable outcome you or a person could check. `NEEDS_CONTEXT`, saying what would make it checkable.
 - **Not one PR of work**: the issue is closed or done; say so and ask which issue to take. A parent (an epic, a tracking issue) whose work lives in its children goes to the implement-issues skill, which works through them.
+- **Someone else's**: it is assigned to anyone but the user or the account your tracker tool is signed in as. Ask whether to take it over.
 
 Done when you hold the criteria, the scope (in and out), and every linked doc and named file.
 
@@ -70,11 +71,13 @@ Add the issue's definition-of-done items. Done when every criterion has its chec
 
 ## 4. Build, one item at a time
 
+**Claim the issue** before the first commit, so others see it's taken: assign it to the account your tracker tool is signed in as (the agent's own account where it has one, else the user's), as trackers.md's Assign row shows. Already the user's or yours, it's claimed. Claiming sets the assignee only: leave the issue's status to the tracker's integration unless the user or repo asks you to move it. If the tracker refuses the assignment, say so in the reply and carry on.
+
 Branch from the up-to-date default branch, named the repo's way with the issue reference in it (the bare key, like `PROJ-118`, where the tracker links branches by key). For each automated item, load the test-driven-development skill and follow it: this skill's baseline and checklist are its ground step and test list. Without that skill: write the test, watch it fail for the reason the criterion names, make it pass, refactor on green.
 
 After each change, run the narrowest check that covers it (the one test file, typecheck or lint on the touched files); the full suite runs at item boundaries and in step 5.
 
-When an item is green, commit only the files you changed, push, and tick it. After the first item, open the PR as a draft, since it's unfinished, with the template below; then it is the progress record. Its first line is the tracker's link-and-close line from trackers.md (`Closes #42` on GitHub), so merging closes the issue where the tracker supports that. Leave the issue's status to the tracker's integration unless the user or repo asks you to move it.
+When an item is green, commit only the files you changed, push, and tick it. After the first item, open the PR as a draft, since it's unfinished, with the template below; then it is the progress record. Its first line is the tracker's link-and-close line from trackers.md (`Closes #42` on GitHub), so merging closes the issue where the tracker supports that.
 
 - **Copy the pattern.** Add an abstraction (a base class, a helper module, a dependency) only when nothing existing fits, and say why in the PR.
 - **Exactly the issue.** Extras go in the Follow-ups list. A change the criteria don't need is a stop (below).

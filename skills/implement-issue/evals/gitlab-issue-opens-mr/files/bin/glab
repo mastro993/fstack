@@ -79,7 +79,8 @@ def issue(ref):
 def issue_json(i):
     return {"iid": i["number"], "title": i["title"], "description": i["body"], "state": "opened" if i["state"] == "OPEN" else "closed",
             "labels": i["labels"], "web_url": i["url"], "references": {"short": f"#{i['number']}", "full": f"{PROJECT}#{i['number']}"},
-            "issue_type": "issue", "epic": None, "user_notes_count": len(i["comments"])}
+            "issue_type": "issue", "epic": None, "user_notes_count": len(i["comments"]),
+            "assignees": [{"username": a} for a in i.get("assignees", [])]}
 
 
 def notes_json(i):
@@ -134,11 +135,20 @@ elif cmd in (["issue", "view"], ["issue", "show"]):
             data["notes"] = notes_json(i)
         output(data)
     else:
-        print(f"title:\t{i['title']}\nstate:\t{'open' if i['state'] == 'OPEN' else 'closed'}\nlabels:\t{', '.join(i['labels'])}\n"
+        print(f"title:\t{i['title']}\nstate:\t{'open' if i['state'] == 'OPEN' else 'closed'}\nassignees:\t{', '.join(i.get('assignees', []))}\n"
+              f"labels:\t{', '.join(i['labels'])}\n"
               f"iid:\t{i['number']}\nurl:\t{i['url']}\n--\n{i['body']}")
         if "--comments" in args or "-c" in args:
             for c in i["comments"]:
                 print(f"\n--\n{c['author']} commented\n{c['body']}")
+elif cmd == ["issue", "update"]:
+    i = issue(positional())
+    value = flag("-a", "--assignee")
+    if value:
+        names = ["millbrook-volunteer" if n.lstrip("+") == "@me" else n.lstrip("+") for n in value.split(",")]
+        i["assignees"] = (i.get("assignees", []) if value.startswith("+") else []) + [n for n in names if n not in i.get("assignees", [])]
+    save()
+    print(i["url"])
 elif cmd == ["issue", "note"]:
     i = issue(positional())
     i["comments"].append({"author": "millbrook-volunteer", "body": flag("-m", "--message") or ""})
