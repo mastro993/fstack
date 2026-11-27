@@ -1,0 +1,86 @@
+{
+  "issues": [
+    {
+      "number": 40,
+      "title": "Overdue emails members can act on",
+      "body": "## Goal\nMembers ignore the weekly overdue email because it reads the same every week, and desk volunteers have no overview of which loans are badly overdue.\n\n## Acceptance criteria\n- [ ] Overdue emails name the title in the subject (#43).\n- [ ] Overdue emails say how many days overdue the loan is (#41).\n- [ ] Every Monday the desk gets one digest of loans 14 or more days overdue (#42).\n- [ ] The README has a \"Reminder emails\" section telling members when they are emailed and what the email says.\n\n## Sub-issues\n- [x] #43 Overdue email subject names the title\n- [ ] #41 Overdue emails say how many days overdue the loan is\n- [ ] #42 Weekly overdue digest for the desk\n",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/40",
+      "subIssues": [
+        43,
+        41,
+        42
+      ]
+    },
+    {
+      "number": 41,
+      "title": "Overdue emails say how many days overdue the loan is",
+      "body": "Part of #40.\n\n## Context\nMembers at the desk say the weekly overdue email reads the same every week, so they can't tell a new reminder from an old one. The email should say how long the loan has been overdue.\n\n## Scope\nIn: the body of the overdue email that `sendReminders` builds in `src/reminders.js`.\nOut: when reminders are sent; the desk digest (#42).\n\n## Acceptance criteria\n- [ ] Given a loan 7 or more days overdue, when the nightly job emails about it, the body ends with the line `This loan is N days overdue.`, where N is the whole days since the due date (7, 14, ...).\n- [ ] Given a loan less than a full day overdue (the first email), the body has no days-overdue line.\n- [ ] The subject stays `Overdue: <title>`.\n\n## Definition of done\n- [ ] Tests for every acceptance criterion\n- [ ] Docs updated where behavior changed",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/41",
+      "parent": 40
+    },
+    {
+      "number": 42,
+      "title": "Weekly overdue digest for the desk",
+      "body": "Part of #40.\n\n## Dependencies\nBlocked by #41: the digest shows the same days-overdue count the member emails get, so it reuses #41's calculation.\n\n## Context\nDesk volunteers want one list of badly overdue loans to phone members about, instead of searching loan by loan.\n\n## Scope\nIn: a Monday digest sent by the nightly job (`src/reminders.js`) to `desk@millbrook.org`.\nOut: member emails; any page in the web app.\n\n## Acceptance criteria\n- [ ] Given it is Monday, when the nightly job runs, one email goes to `desk@millbrook.org` with subject `Overdue digest` and one line per loan 14 or more days overdue: `<member name> \u2014 <title> \u2014 N days overdue`, most overdue first.\n- [ ] Given no loan is 14 or more days overdue, no digest is sent.\n- [ ] Given any other weekday, no digest is sent.\n\n## Definition of done\n- [ ] Tests for every acceptance criterion\n- [ ] Docs updated where behavior changed",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [
+        41
+      ],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/42",
+      "parent": 40
+    },
+    {
+      "number": 43,
+      "title": "Overdue email subject names the title",
+      "body": "Part of #40.\n\nThe subject should be `Overdue: <title>` instead of `Overdue loan`.",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "CLOSED",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/43",
+      "parent": 40,
+      "stateReason": "COMPLETED"
+    }
+  ],
+  "pulls": [
+    {
+      "number": 39,
+      "title": "Name the title in the overdue email subject",
+      "body": "Closes #43\n\n## Checklist\n- [x] Subject is `Overdue: <title>` \u2014 `the first reminder goes out when the loan is already overdue` in `test/loans.test.js`",
+      "headRefName": "43-subject-title",
+      "baseRefName": "main",
+      "isDraft": false,
+      "state": "MERGED",
+      "url": "https://github.com/millbrook/readwell/pull/39"
+    },
+    {
+      "number": 50,
+      "title": "Say how many days overdue a loan is in the overdue email",
+      "body": "Closes #41\n\n## Checklist\n- [x] Body ends with `This loan is N days overdue.` from 7 days on \u2014 `the overdue email says how many days overdue` in `test/loans.test.js`\n- [x] No days-overdue line on the first email \u2014 `the first overdue email has no days-overdue line` in `test/loans.test.js`\n- [x] Subject stays `Overdue: <title>` \u2014 `the overdue email says how many days overdue` in `test/loans.test.js`\n- [x] Docs updated where behavior changed\n\n## Verification\nAutomated: `node --test` \u2192 5 passed (baseline: clean)\n\n## Decisions\nnone\n\n## Deviations from the issue\nnone\n\n## Follow-ups\nnone",
+      "headRefName": "41-days-overdue",
+      "baseRefName": "main",
+      "isDraft": false,
+      "state": "OPEN",
+      "url": "https://github.com/millbrook/readwell/pull/50"
+    }
+  ],
+  "next": 51
+}

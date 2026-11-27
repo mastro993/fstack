@@ -1,0 +1,3 @@
+interface:
+  display_name: "Implement Issues"
+  short_description: "Work through several issues or a parent's sub-issues in merge-gated batches, one implement-issue run per issue"
