@@ -42,7 +42,10 @@ Fill the repo's template when it has one: keep its headings, order, and checkbox
 
 The prose around them is short, plain sentences in the project's own terms, written for a reviewer who hasn't seen the conversation. Every claim about behavior comes from the diff, a test, or a command you ran.
 
-**Blast radius** closes the What section as one short prose paragraph, about three sentences: its size in a word (contained, moderate, wide), what else now behaves differently, what stays as it was where a reader would worry, and whether it's a two-way door (a revert undoes it) or a one-way one (a migration, deleted data, a published API). Find it by searching for the users of what changed: `git grep` every changed function, type, route, env var, schema field, and config key until each one's callers, consumers, and clients are accounted for.
+**Merge danger** gets its own section, in prose, right after What in the default template:
+
+- **Reversible**: yes when a revert undoes the change, no when it leaves something behind (a migration, deleted data, a published API, sent emails), with the reason in a sentence.
+- **Blast radius**: one short paragraph, about three sentences: its size in a word (contained, moderate, wide), what else now behaves differently, and what stays as it was where a reader would worry. Find it by searching for the users of what changed: `git grep` every changed function, type, route, env var, schema field, and config key until each one's callers, consumers, and clients are accounted for.
 
 **Bugs** get a repro under How to test: the exact steps and inputs that show the bug on the base branch, what happens there, and what happens on this branch. The tester runs it on both and sees the difference.
 
@@ -69,7 +72,11 @@ Expired coupons still apply their discount at checkout, so lapsed promo codes ke
   return accept(coupon.discount);
 ```
 
-**Blast radius: moderate.** Checkout and admin-created orders both go through `validateCoupon()`, so both now refuse expired coupons; orders already placed keep their discount. Two-way door: a revert restores the old check.
+## Merge danger
+
+**Reversible: yes.** A revert restores the old check; nothing is stored or migrated.
+
+**Blast radius: moderate.** Checkout and admin-created orders both go through `validateCoupon()`, so both now refuse expired coupons. Orders already placed keep their discount.
 
 ## How to test
 
