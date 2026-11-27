@@ -1,10 +1,12 @@
 ---
 name: implement-issue
-description: Use when the user asks to implement, fix, or resume one specific issue or ticket on any tracker, such as "implement #42", "pick up PROJ-118", "carry on with #42", or when another skill hands off one issue to build.
-compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the implement and test-driven-development skills from the same plugin (pr-ship, when the user asks to merge a GitHub PR). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them.
+description: Use when the user asks to implement, fix, or resume issues or tickets on any tracker, one or several, or a parent issue (an epic or tracking issue) through its sub-issues, such as "implement #42", "pick up PROJ-118", "carry on with #42", "implement #12, #15 and #19", "work through the sub-issues of #40", or "start the next batch", or when another skill hands off issues to build.
+compatibility: Needs git, a way to read the issue's tracker and to open pull or merge requests on the code host (a CLI such as gh, glab, acli, az, or tea, a tracker MCP server, or the REST API), the project's own test and build tooling, and the implement and test-driven-development skills from the same plugin (pr-ship, when the user asks to merge a GitHub PR; create-issues, to file a parent's gaps). Uses a reviewer subagent and a question tool (AskUserQuestion or the harness's equivalent) when the harness has them, and threads or subagents to run several issues.
 ---
 
 # Implement issue
+
+**Several issues, or a parent** (an epic or tracking issue whose work lives in its sub-issues): you are the planner, not a builder. Read [references/batches.md](references/batches.md) now and follow it in place of the rest of this file: each issue gets its own run of this skill, and your replies are the plan and the batch reports. One issue that isn't a parent, a child included: read on.
 
 One issue in, one branch and one pull request out. The issue is the **contract**: its acceptance criteria say what gets built, and you decide only how. Anything it doesn't ask for (a refactor you'd like, a bug you spot, the next issue's work) goes in the PR as a follow-up, never into the diff: reviewers check the PR against the issue, and every unrequested line is one they must work out the intent of.
 
@@ -12,7 +14,7 @@ The **tracker** holds the issue (GitHub, GitLab, Jira, Linear, Azure Boards, …
 
 Whatever you tell the user or write in the PR about what the code does cites its evidence: a file:line, or a command you ran and its output. A suspicion you haven't checked is either checked first or labelled as one; a confident wrong claim costs the reader more than silence.
 
-Every run ends with exactly one status, as the reply's last line: `STATUS: <status> — <short reason>`.
+Every single-issue run ends with exactly one status, as the reply's last line: `STATUS: <status> — <short reason>`.
 
 | Status | When |
 | --- | --- |
@@ -36,7 +38,7 @@ Stop before anything else when:
 
 - **No acceptance criteria**, or none a person could check ("make it clearer", "clean up X"): `NEEDS_CONTEXT`. Say what's missing and propose criteria you'd use, each checkable, so the author is one edit from a startable issue. Don't build on your own proposal: what gets built is the author's call.
 - **No way to verify**: no test runner and no observable outcome you or a person could check. `NEEDS_CONTEXT`, saying what would make it checkable.
-- **Not one PR of work**: the issue is closed or done; say so and ask which issue to take. A parent (an epic, a tracking issue) whose work lives in its children goes to the implement-issues skill, which works through them.
+- **Not one PR of work**: the issue is closed or done; say so and ask which issue to take. An issue that turns out to be a parent goes to [references/batches.md](references/batches.md).
 - **Someone else's**: it is assigned to anyone but the user or the account your tracker tool is signed in as. Ask whether to take it over.
 
 Done when you hold the criteria, the scope (in and out), and every linked doc and named file.
