@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: issue-contradicts-adr-stops
+expected_outcome: |
+  Issue #19 claims ADR 0003 already allows two renewals, but docs/adr/0003-one-renewal-per-loan.md
+  says one renewal per loan (so every copy is back within six weeks), and src/loans.js cites it. The run
+  reads the ADR, changes no code, opens no PR, and reports the mismatch as what the issue expected, what it
+  found (with the file), and why it matters (building it contradicts an accepted decision, which would need
+  superseding), ending with STATUS: NEEDS_CONTEXT.
+context:
+  scaffold_script: place-files.sh

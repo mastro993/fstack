@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+"""Stub gh for the GitLab eval: this repository has no GitHub remote, so every call fails the way gh does."""
+import json, sys
+from pathlib import Path
+root = Path(__file__).resolve().parent.parent / ".gh-stub"
+root.mkdir(exist_ok=True)
+with (root / "calls.log").open("a") as log:
+    log.write(json.dumps(sys.argv[1:]) + "\n")
+if sys.argv[1:2] in (["--version"], ["version"]):
+    print("gh version 2.103.3 (2026-10-26)")
+    sys.exit(0)
+sys.exit("none of the git remotes configured for this repository point to a known GitHub host. To tell gh about a new GitHub host, please use `gh auth login`")

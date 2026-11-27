@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: resume-from-pr-checklist
+expected_outcome: |
+  A draft PR #20 for #14 exists on branch 14-overdue-days-line with the first criterion done and ticked;
+  the first-email and subject criteria are unticked. The run finds PR #20, continues on its branch (no new
+  branch or PR), does not redo the ticked item, makes the first email leave out the days-overdue line (the
+  branch currently prints "0 days overdue"), adds tests for the open items, pushes to
+  14-overdue-days-line, and updates PR #20's body: the automated items ticked, the VPS check still an
+  unticked manual check. The reply ends with STATUS: DONE.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,55 @@
+{
+  "issues": [
+    {
+      "number": 13,
+      "title": "Let members pick a reminder time",
+      "body": "Some members would like the reminder in the evening instead of at night.",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/13"
+    },
+    {
+      "number": 16,
+      "title": "Store each member's reminder preference",
+      "body": "## Context\nMembers need a way to stop overdue emails. This adds the stored preference the email link (#17) will set.\n\n## Acceptance criteria\n- [ ] Each member has a `remindersOff` flag, false by default.\n- [ ] `setRemindersOff(memberId, value)` in `src/members.js` sets it.\n- [ ] `sendReminders` skips members whose `remindersOff` is true.",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/16"
+    },
+    {
+      "number": 17,
+      "title": "Members can stop overdue emails from a link in the email",
+      "body": "## Context\nSome members return books late on purpose (long reads with the librarian's okay) and want the weekly overdue emails to stop. Every overdue email gets a link that turns them off, using the preference from #16.\n\n## Scope\nIn: the link in the overdue email body and the handler that sets the preference.\nOut: storing the preference (#16).\n\n## Acceptance criteria\n- [ ] Every overdue email body ends with `Stop these emails: https://readwell.millbrook.org/reminders/off?member=<id>&token=<token>`, where the token is an HMAC of the member id with `READWELL_SECRET`.\n- [ ] `turnOffReminders(memberId, token)` in `src/members.js` calls `setRemindersOff(memberId, true)` when the token matches, and returns `{ ok: false, reason: 'bad-token' }` otherwise.\n\n## Dependencies\nBlocked by: #16",
+      "labels": [
+        "enhancement"
+      ],
+      "state": "OPEN",
+      "blockedBy": [
+        16
+      ],
+      "comments": [],
+      "url": "https://github.com/millbrook/readwell/issues/17"
+    }
+  ],
+  "pulls": [
+    {
+      "number": 18,
+      "title": "Store each member's reminder preference",
+      "body": "Closes #16\n\nWork in progress: adds `remindersOff` and `setRemindersOff`.",
+      "headRefName": "16-reminder-preference",
+      "baseRefName": "main",
+      "isDraft": true,
+      "state": "OPEN",
+      "url": "https://github.com/millbrook/readwell/pull/18"
+    }
+  ],
+  "next": 24
+}
