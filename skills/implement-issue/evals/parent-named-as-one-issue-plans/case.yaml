@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: parent-named-as-one-issue-plans
+expected_outcome: |
+  The user names one issue, #40, but #40 is a parent: #43 is closed with its PR #39 merged, #41 has no
+  blockers, and #42 is blocked by #41. The run finds the sub-issues and plans them instead of building #40
+  as one issue: batch 1 is #41, batch 2 is #42, #43 is done, shown as markdown the chat renders. Naming
+  the issue is not a go, so the run stops at the plan: no runner, no branch, no assignment, no PR.
+context:
+  scaffold_script: place-files.sh

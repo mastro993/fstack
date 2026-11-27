@@ -2,8 +2,8 @@
 set -eu
 here="$(dirname "$0")"
 cp -R "$here/../../../feature-design/evals/challenges-idea-before-interview/files/." .
-cp -R "$here/../parent-runs-first-batch-only/files/bin" .
-cp -R "$here/files/." .
+cp -R "$here/../clear-issue-ships-test-first-pr/files/bin" .
+cp -R "$here/../parent-runs-first-batch-only/files/." .
 git init -q --bare remote/readwell.git
 git -C readwell init -q -b main
 git -C readwell remote add origin https://github.com/millbrook/readwell.git
