@@ -1,0 +1,16 @@
+{
+ "repo": "readwell-dev/brewcard-site",
+ "default_branch": "main",
+ "viewer": "readwell-dev",
+ "fixture": {
+  "base": "main",
+  "head": "feat/pricing-highlight-team",
+  "commits": [{"dir": "c1", "message": "pricing: highlight team plan"}]
+ },
+ "issues": {},
+ "merged_titles": [
+  "feat(pricing): add the studio plan",
+  "fix(landing): stop the hero video autoplaying on mobile",
+  "docs: document the local preview"
+ ]
+}

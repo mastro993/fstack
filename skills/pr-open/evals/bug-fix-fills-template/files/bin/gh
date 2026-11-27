@@ -1,0 +1,298 @@
+#!/usr/bin/env python3
+"""Stub gh CLI for pr-open evals.
+
+Simulates one GitHub repo on top of a local bare repository (remote.git): its issues, its recent
+merged PR titles, and the PRs this run opens. Scenario keys in .gh-stub/scenario.json:
+  repo            owner/name
+  default_branch  the base branch
+  issues          {"<n>": {title, body, labels, comments}}
+  merged_titles   recent merged PR titles, newest first
+
+`gh pr create` and `gh pr edit` record the PR in .gh-stub/state.json (title, body, base, head,
+draft, attachments) and copy each --attach file to .gh-stub/attachments/. Every call is appended
+to .gh-stub/calls.log, for grading.
+"""
+
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+STUB = ROOT / ".gh-stub"
+REMOTE = ROOT / "remote.git"
+SCN = json.loads((STUB / "scenario.json").read_text())
+STATE_FILE = STUB / "state.json"
+STATE = json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {"prs": []}
+OWNER_REPO = SCN["repo"]
+BASE = SCN["default_branch"]
+
+CREATE_HELP = """Create a pull request on GitHub.
+
+Use `--attach` to upload an image or video. The attachment is appended to the
+body. If the body references an attached file, such as `![alt](./login.png)`, that
+reference is rewritten to point at the uploaded asset instead. Paths in a
+`--body-file` are relative to its directory, falling back to the working directory.
+
+USAGE
+  gh pr create [flags]
+
+FLAGS
+      --attach file          Attach an image or video file, in '<file>#<image alt text>' format
+  -B, --base branch          The branch into which you want your code merged
+  -b, --body string          Body for the pull request
+  -F, --body-file file       Read body text from file (use "-" to read from standard input)
+  -d, --draft                Mark pull request as a draft
+  -H, --head branch          The branch that contains commits for your pull request (default [current branch])
+  -l, --label name           Add labels by name
+  -r, --reviewer handle      Request reviews from people or teams by their handle
+  -t, --title string         Title for the pull request
+"""
+
+
+def save():
+    STATE_FILE.write_text(json.dumps(STATE, indent=1))
+
+
+def fail(msg, code=1):
+    print(msg, file=sys.stderr)
+    sys.exit(code)
+
+
+def flag(args, *names):
+    for i, a in enumerate(args):
+        for n in names:
+            if a == n and i + 1 < len(args):
+                return args[i + 1]
+            if a.startswith(n + "="):
+                return a[len(n) + 1:]
+    return None
+
+
+def flags(args, name):
+    out = []
+    for i, a in enumerate(args):
+        if a == name and i + 1 < len(args):
+            out.append(args[i + 1])
+        elif a.startswith(name + "="):
+            out.append(a[len(name) + 1:])
+    return out
+
+
+def positional(args):
+    """The first argument that is neither a flag nor a flag's value."""
+    takes_value = {"--json", "--jq", "-q", "-R", "--repo", "--title", "-t", "--body", "-b", "--body-file",
+                   "-F", "--base", "-B", "--head", "-H", "--attach", "--state", "-s", "--limit", "-L",
+                   "--label", "-l", "--reviewer", "-r", "--search", "-S", "--template", "-T", "--assignee", "-a"}
+    skip = False
+    for a in args:
+        if skip:
+            skip = False
+            continue
+        if a in takes_value:
+            skip = True
+            continue
+        if a.startswith("-"):
+            continue
+        return a
+    return None
+
+
+def emit(obj, args):
+    fields = flag(args, "--json")
+    if fields and isinstance(obj, dict):
+        obj = {k: obj.get(k) for k in fields.split(",")}
+    elif fields and isinstance(obj, list):
+        keys = fields.split(",")
+        obj = [{k: o.get(k) for k in keys} for o in obj]
+    text = json.dumps(obj)
+    expr = flag(args, "--jq", "-q")
+    if expr:
+        r = subprocess.run(["jq", "-r", expr], input=text, capture_output=True, text=True)
+        sys.stdout.write(r.stdout)
+        sys.stderr.write(r.stderr)
+        sys.exit(r.returncode)
+    print(text if fields else json.dumps(obj, indent=1))
+
+
+def current_branch():
+    return subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True).stdout.strip()
+
+
+def remote_has(branch):
+    r = subprocess.run(["git", "--git-dir", str(REMOTE), "rev-parse", "--verify", "-q", f"refs/heads/{branch}"],
+                       capture_output=True, text=True)
+    return r.returncode == 0
+
+
+def find_pr(ref):
+    for pr in STATE["prs"]:
+        if ref in (None, "") and pr["headRefName"] == current_branch():
+            return pr
+        if ref is not None and (str(pr["number"]) == str(ref).lstrip("#") or pr["headRefName"] == ref or pr["url"] == ref):
+            return pr
+    return None
+
+
+def read_body(args):
+    body = flag(args, "--body", "-b")
+    src = flag(args, "--body-file", "-F")
+    body_dir = Path.cwd()
+    if src is not None:
+        if src == "-":
+            body = sys.stdin.read()
+        else:
+            p = Path(src)
+            if not p.exists():
+                fail(f"open {src}: no such file or directory")
+            body = p.read_text()
+            body_dir = p.resolve().parent
+    return body, body_dir
+
+
+def attach(body, body_dir, args):
+    """Copy each --attach file into the stub and point the body's references at the 'upload'."""
+    out = []
+    for spec in flags(args, "--attach"):
+        path, _, alt = spec.partition("#")
+        p = Path(path)
+        if not p.is_absolute() and not p.exists():
+            p = body_dir / path
+        if not p.exists():
+            fail(f"attach {path}: no such file or directory")
+        data = p.read_bytes()
+        digest = hashlib.sha1(data).hexdigest()[:12]
+        dest = STUB / "attachments" / f"{digest}-{p.name}"
+        dest.parent.mkdir(exist_ok=True)
+        shutil.copy(p, dest)
+        url = f"https://github.com/user-attachments/assets/{digest}"
+        pattern = re.compile(r"(!\[[^\]]*\]\()(\./)?" + re.escape(p.name) + r"\)")
+        if body is not None and pattern.search(body):
+            body = pattern.sub(lambda m: m.group(1) + url + ")", body)
+        elif body is not None:
+            body += f"\n\n![{alt or p.name}]({url})"
+        out.append({"file": str(p), "alt": alt, "bytes": len(data), "png": data[:8] == b"\x89PNG\r\n\x1a\n", "url": url})
+    return body, out
+
+
+def pr_json(pr):
+    return dict(pr, isDraft=pr["draft"], state="OPEN")
+
+
+def pr_create(args):
+    if "--help" in args or "-h" in args:
+        print(CREATE_HELP)
+        return
+    title = flag(args, "--title", "-t")
+    body, body_dir = read_body(args)
+    if "--fill" in args or "--fill-first" in args or "--fill-verbose" in args:
+        fail("stub: --fill is not simulated; pass --title and --body or --body-file")
+    if title is None or body is None:
+        fail("must provide `--title` and `--body` (or `--fill` or `fill-first` or `--fillverbose`) when not running interactively")
+    head = flag(args, "--head", "-H") or current_branch()
+    base = flag(args, "--base", "-B") or BASE
+    if not remote_has(head):
+        fail(f"aborted: you must first push the current branch to a remote, or use the --head flag")
+    if find_pr(head):
+        fail(f'a pull request for branch "{head}" into branch "{base}" already exists:\n{find_pr(head)["url"]}')
+    body, attachments = attach(body, body_dir, args)
+    n = 100 + len(STATE["prs"]) + 1
+    pr = {"number": n, "url": f"https://github.com/{OWNER_REPO}/pull/{n}", "title": title, "body": body,
+          "baseRefName": base, "headRefName": head, "draft": "--draft" in args or "-d" in args,
+          "labels": flags(args, "--label"), "reviewers": flags(args, "--reviewer"), "attachments": attachments}
+    STATE["prs"].append(pr)
+    save()
+    print(pr["url"])
+
+
+def pr_edit(args):
+    pr = find_pr(positional(args))
+    if not pr:
+        fail(f'no pull requests found for branch "{current_branch()}"')
+    title = flag(args, "--title", "-t")
+    body, body_dir = read_body(args)
+    if title is not None:
+        pr["title"] = title
+    if body is not None:
+        pr["body"] = body
+    pr["body"], more = attach(pr["body"], body_dir, args)
+    pr["attachments"] += more
+    pr["edits"] = pr.get("edits", 0) + 1
+    save()
+    print(pr["url"])
+
+
+def pr_cmd(args):
+    sub, rest = args[0], args[1:]
+    if sub == "create":
+        return pr_create(rest)
+    if sub == "edit":
+        return pr_edit(rest)
+    if sub == "view":
+        pr = find_pr(positional(rest))
+        if not pr:
+            fail(f'no pull requests found for branch "{positional(rest) or current_branch()}"')
+        return emit(pr_json(pr), rest)
+    if sub == "list":
+        state = flag(rest, "--state", "-s") or "open"
+        if state == "merged":
+            items = [{"number": 90 - i, "title": t, "state": "MERGED"} for i, t in enumerate(SCN.get("merged_titles", []))]
+        else:
+            items = [pr_json(p) for p in STATE["prs"]] if state in ("open", "all") else []
+        limit = flag(rest, "--limit", "-L")
+        return emit(items[: int(limit)] if limit else items, rest)
+    fail(f"stub: `gh pr {sub}` is not simulated in this sandbox")
+
+
+def issue_cmd(args):
+    sub, rest = args[0], args[1:]
+    if sub == "view":
+        ref = (positional(rest) or "").rstrip("/").split("/")[-1].lstrip("#")
+        issue = SCN.get("issues", {}).get(ref)
+        if not issue:
+            fail(f"GraphQL: Could not resolve to an issue or pull request with the number of {ref}. (repository.issue)")
+        full = {"number": int(ref), "state": "OPEN", "url": f"https://github.com/{OWNER_REPO}/issues/{ref}",
+                "labels": [{"name": l} for l in issue.get("labels", [])],
+                "comments": [{"author": {"login": c["author"]}, "body": c["body"]} for c in issue.get("comments", [])],
+                "title": issue["title"], "body": issue["body"]}
+        return emit(full, rest)
+    if sub == "list":
+        return emit([{"number": int(k), "title": v["title"], "state": "OPEN"} for k, v in SCN.get("issues", {}).items()], rest)
+    fail(f"stub: `gh issue {sub}` is not simulated in this sandbox")
+
+
+def repo_cmd(args):
+    if args[0] == "view":
+        owner, name = OWNER_REPO.split("/")
+        return emit({"nameWithOwner": OWNER_REPO, "name": name, "owner": {"login": owner},
+                     "defaultBranchRef": {"name": BASE}, "url": f"https://github.com/{OWNER_REPO}"}, args[1:])
+    fail(f"stub: `gh repo {args[0]}` is not simulated in this sandbox")
+
+
+def main():
+    args = sys.argv[1:]
+    with open(STUB / "calls.log", "a") as log:
+        log.write(json.dumps(args) + "\n")
+    if not args or args[0] in ("--version", "version"):
+        print("gh version 2.103.3 (stub)")
+        return
+    cmd = args[0]
+    if cmd == "auth":
+        print(f"github.com\n  ✓ Logged in to github.com account {SCN.get('viewer', 'readwell-dev')}")
+        return
+    if cmd == "pr" and len(args) > 1:
+        return pr_cmd(args[1:])
+    if cmd == "issue" and len(args) > 1:
+        return issue_cmd(args[1:])
+    if cmd == "repo" and len(args) > 1:
+        return repo_cmd(args[1:])
+    if cmd == "api":
+        fail("gh: Not Found (HTTP 404)")
+    fail(f"stub: `gh {' '.join(args[:2])}` is not simulated in this sandbox")
+
+
+if __name__ == "__main__":
+    main()

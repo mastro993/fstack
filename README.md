@@ -7,7 +7,7 @@
 **A short stack of agent skills for everyday software engineering work.**
 
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-D97757?style=flat-square)](https://www.fedemas.dev/fstack)
-[![Version](https://img.shields.io/badge/version-0.15.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-0.16.0-B4A7E5?style=flat-square)](.claude-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-93D3BB?style=flat-square)](LICENSE)
 
 </div>
@@ -33,7 +33,7 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 | UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) · [design-system](skills/design-system/SKILL.md) |
 | Building | [implement](skills/implement/SKILL.md) · [implement-issue](skills/implement-issue/SKILL.md) · [test-driven-development](skills/test-driven-development/SKILL.md) |
 | Code quality | [code-review](skills/code-review/SKILL.md) · [receiving-code-review](skills/receiving-code-review/SKILL.md) · [comment-sweep](skills/comment-sweep/SKILL.md) |
-| Pull requests | [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
+| Pull requests | [pr-open](skills/pr-open/SKILL.md) · [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
 
 ## 📦 Install
 
@@ -159,12 +159,13 @@ The skills hand work to each other, so install each one together with every skil
 
 | Skill | Needs |
 | --- | --- |
-| feature-design | domain-driven-design, ux-brainstorm, test-driven-development, pr-babysit, resolve-merge-conflicts |
-| ux-brainstorm | domain-driven-design, pr-babysit, resolve-merge-conflicts |
-| design-system | ux-brainstorm, domain-driven-design, pr-babysit, resolve-merge-conflicts |
-| implement-issue | implement, test-driven-development, create-issues, pr-ship, pr-babysit, resolve-merge-conflicts |
+| feature-design | domain-driven-design, ux-brainstorm, test-driven-development, pr-open, pr-babysit, resolve-merge-conflicts |
+| ux-brainstorm | domain-driven-design, pr-open, pr-babysit, resolve-merge-conflicts |
+| design-system | ux-brainstorm, domain-driven-design, pr-open, pr-babysit, resolve-merge-conflicts |
+| implement-issue | implement, test-driven-development, create-issues, pr-open, pr-ship, pr-babysit, resolve-merge-conflicts |
+| create-issues | pr-open, pr-babysit, resolve-merge-conflicts |
 | implement | test-driven-development |
-| pr-ship | pr-babysit, resolve-merge-conflicts |
+| pr-ship | pr-open, pr-babysit, resolve-merge-conflicts |
 | pr-babysit | resolve-merge-conflicts |
 
 </details>

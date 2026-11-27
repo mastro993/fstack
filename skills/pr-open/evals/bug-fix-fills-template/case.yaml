@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: bug-fix-fills-template
+expected_outcome: |
+  The fix for issue #57 (orders of exactly €50.00 paid €4.90 shipping; `>` became `>=` in
+  shop/shipping.py) is committed but unpushed. The run pushes the branch and opens one PR against
+  main titled like `fix(shipping): [#57] apply free shipping at exactly €50`: conventional type,
+  the repo's scope, the issue in brackets, an imperative lowercase summary. The body fills the
+  repo's template (Summary, Changes, Testing, Checklist) and carries Closes #57, a diff block of
+  the comparison, the blast radius (order_total at checkout and the mobile app's quote endpoint
+  both use shipping_cost), a repro for €50.00 on main versus this branch, and the test command
+  with its result. The run ends with the PR link, leaving CI, reviews and merge alone.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,24 @@
+{
+ "repo": "readwell-dev/parcelpost",
+ "default_branch": "main",
+ "viewer": "readwell-dev",
+ "fixture": {
+  "base": "main",
+  "head": "fix/57-free-shipping-at-threshold",
+  "commits": [{"dir": "c1", "message": "fix: free shipping at threshold"}]
+ },
+ "issues": {
+  "57": {
+   "title": "Orders of exactly €50 still pay shipping",
+   "labels": ["bug"],
+   "body": "The banner says \"Free shipping from €50\", but an order whose subtotal is exactly €50.00 is charged €4.90 shipping.\n\nSteps:\n1. Add items worth €50.00 to the cart (e.g. two Canvas Tote at €25.00).\n2. Go to checkout.\n\nActual: shipping €4.90, total €54.90.\nExpected: shipping €0.00, total €50.00.\n\nThe quote endpoint the mobile app uses shows the same €4.90.",
+   "comments": [{"author": "desk-lead", "body": "Confirmed, support has had three tickets about this this week."}]
+  }
+ },
+ "merged_titles": [
+  "feat(quote-api): return shipping in price quotes",
+  "fix(checkout): round line totals half up",
+  "refactor(shipping): extract the flat rate into a constant",
+  "chore(deps): bump coverage to 7.6"
+ ]
+}

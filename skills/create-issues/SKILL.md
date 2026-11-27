@@ -1,7 +1,7 @@
 ---
 name: create-issues
 description: Use when agreed work should become issues or tickets on the project's tracker, such as "open issues for this spec", "break this plan into tickets", "file this bug", or another skill's handoff that ends in issues.
-compatibility: Needs the pr-babysit skill from the same plugin to land docs. Works best with gh 2.94+ (native sub-issue and blocked-by links) or a tracker MCP, and a question tool (AskUserQuestion or the harness's equivalent).
+compatibility: Needs the pr-open and pr-babysit skills from the same plugin to land docs. Works best with gh 2.94+ (native sub-issue and blocked-by links) or a tracker MCP, and a question tool (AskUserQuestion or the harness's equivalent).
 ---
 
 # Create issues
@@ -84,7 +84,7 @@ Show the tier and why, the issues (title, trigger, blocked by, parallel with), t
 Issues outlive branches: a link to a docs branch dies once it merges and is deleted, and a link to the default branch drifts as the docs change. So every linked file lands on the default branch first, and each issue links it at a fixed commit there.
 
 1. Skip to step 3 of this list when every linked file is already on the remote's default branch.
-2. Commit the files on a branch, push it, and open a pull request for it the way the user and the repo open theirs (draft or ready for review, the PR template); say in its body that the issues follow its merge. Tell the user in a line, with the link, that the issues wait for the merge, and, for a draft, that it waits on them to mark it ready. Then load the pr-babysit skill and run it on that PR, merging only if the user asked. If the PR closes unmerged, or the push fails, ask the user how to go on.
+2. Commit the files on a branch and open a pull request for it with the pr-open skill; say in its body that the issues follow its merge. Tell the user in a line, with the link, that the issues wait for the merge, and, for a draft, that it waits on them to mark it ready. Then load the pr-babysit skill and run it on that PR, merging only if the user asked. If the PR closes unmerged, or the push fails, ask the user how to go on.
 3. Update the local default branch and re-read the linked files as merged, since review may have changed them. Take the full SHA of its head (`git rev-parse origin/<default-branch>`) and link every file as `https://github.com/<owner>/<repo>/blob/<sha>/<path>`, or the tracker's equivalent.
 
 A file that can't land (git-ignored, local to this machine) can't be linked: describe it in words, and attach images after opening each one to check it shows nothing sensitive (secrets, real personal data, internal-only identifiers).
