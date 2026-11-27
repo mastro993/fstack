@@ -3,9 +3,9 @@ name: draft-text-shows-blast-radius
 expected_outcome: |
   The user wants the PR text only. The run opens no PR and replies with a title like
   `feat(holds): [LIB-204] expire holds not collected within 7 days` and a body in the default
-  shape (the repo has no template): Why, What, How to test, and no Previews section. Hold states
+  shape (the repo has no template): Why, What, Merge danger, How to test, and no Previews section. Hold states
   change from requested/collected to requested → ready → collected or expired, best shown as a
-  mermaid state diagram. The blast radius names what the diff doesn't touch but now behaves
+  mermaid state diagram. Merge danger's blast radius names what the diff doesn't touch but now behaves
   differently: the nightly report's open_holds counts only `requested`, so ready holds drop out
   of it, and the front desk's hand_over_hold now raises for a hold that isn't ready yet; plus the
   new hold_ready/hold_expired emails and the new expire_holds cron job. How to test names the
