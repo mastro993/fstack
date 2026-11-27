@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Post a review-findings.json to its pull request as one review with event COMMENT: an inline
 # comment per finding or question whose lines are in the diff, the rest in the review body. Each
-# comment carries a hidden marker with its id and the reviewed head, so a rerun skips what is
-# already posted and later reviews can count what got addressed.
+# comment carries a hidden marker with its id and the reviewed head, so later reviews can count
+# what got addressed. A rerun skips the comments already posted word for word.
 #
 # This is the only path in the skill that writes to a PR. It never approves or requests changes.
 #
@@ -18,6 +18,7 @@ bash "$here/validate_findings.sh" "$file" >&2
 url=$(gh pr view "$pr" --json url --jq .url)
 repo=${url#*://*/} repo=${repo%/pull/*}
 work=$(mktemp -d "${TMPDIR:-/tmp}"/code-review-post.XXXXXX)
+trap 'rm -rf "$work"' EXIT
 { gh api "repos/$repo/pulls/$pr/comments" --paginate --jq '.[].body'
   gh api "repos/$repo/pulls/$pr/reviews" --paginate --jq '.[].body'
 } > "$work/posted.txt"
@@ -64,7 +65,8 @@ def body_of(item):
 
 inline, in_body, skipped = [], [], 0
 for item in doc["findings"] + doc.get("questions", []):
-    if marker(item) in posted:
+    # Ids are rank positions: another run at this head can give F1 to another finding.
+    if body_of(item) in posted:
         skipped += 1
         continue
     loc = item["location"]

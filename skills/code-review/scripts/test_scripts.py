@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for collect_context.sh, validate_findings.sh, and rank_findings.sh: python3 test_scripts.py"""
+"""Tests for the review's scripts, with a stand-in for gh: python3 test_scripts.py"""
 
 import json
 import os
@@ -10,7 +10,23 @@ import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-COLLECT, VALIDATE, RANK = (str(HERE / name) for name in ("collect_context.sh", "validate_findings.sh", "rank_findings.sh"))
+COLLECT, VALIDATE, RANK, POST = (str(HERE / name) for name in
+                                 ("collect_context.sh", "validate_findings.sh", "rank_findings.sh", "post_comments.sh"))
+
+# gh for PR #7 of o/r: reads print every body posted so far, a POST adds its bodies.
+FAKE_GH = """#!/usr/bin/env bash
+case "$1" in
+  pr) echo https://git.example.com/o/r/pull/7 ;;
+  api)
+    while [ $# -gt 0 ] && [ "$1" != --input ]; do shift; done
+    if [ $# -gt 1 ]; then
+      python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); print("\\n".join([d["body"], *(c["body"] for c in d["comments"])]))' "$2" >> "$GH_POSTED"
+      echo https://git.example.com/o/r/pull/7#review
+    else
+      cat "$GH_POSTED"
+    fi ;;
+esac
+"""
 
 
 class ScriptsTest(unittest.TestCase):
@@ -40,8 +56,8 @@ class ScriptsTest(unittest.TestCase):
         self.git("add", "-A")
         self.git("commit", "-qm", message)
 
-    def run_script(self, script, *args):
-        env = dict(os.environ, TMPDIR=str(self.tmp))
+    def run_script(self, script, *args, **env):
+        env = dict(os.environ, TMPDIR=str(self.tmp), **env)
         return subprocess.run(["bash", script, *args], cwd=self.repo, capture_output=True, text=True, env=env)
 
     def collect(self, *args):
@@ -81,10 +97,34 @@ class ScriptsTest(unittest.TestCase):
         self.assertEqual((Path(ctx["work_dir"]) / "rules/CLAUDE.md").read_text(), "- Money is integer cents.\n")
         self.assertEqual(ctx["strictness"], "balanced")
 
-    def test_docs_only_change_is_trivial(self):
+    def test_docs_only_change_is_trivial_but_a_rules_file_is_code(self):
         self.write("README.md", "# Calc\n")
         self.commit("Docs")
         self.assertEqual(self.collect()["size"], "trivial")
+        self.write("REVIEW.md", "strictness: balanced\n")
+        self.commit("Relax the review")
+        self.assertEqual(self.collect()["size"], "small")
+
+    def test_whitespace_is_trivial_only_where_indentation_is_not_syntax(self):
+        self.git("checkout", "-q", "main")
+        self.write("src/app.js", "function add(a, b) {\n  return a + b;\n}\n")
+        self.commit("Add app.js")
+        self.git("checkout", "-q", "-B", "feat")
+        self.write("src/app.js", "function add(a, b) {\n    return a + b;\n}\n")
+        self.commit("Reindent app.js")
+        self.assertEqual(self.collect()["size"], "trivial")
+        self.write("src/calc.py", "def add(a, b):\n        return a + b\n")
+        self.commit("Reindent calc.py")
+        self.assertEqual(self.collect()["size"], "small")
+
+    def test_findings_files_stay_out_of_the_snapshot(self):
+        self.write("src/calc.py", "def add(a, b):\n    return a - b\n")
+        self.commit("Subtract instead")
+        first = self.collect()
+        self.write("review-findings.json", "{}\n")
+        self.write("src/review-findings.json", "{}\n")
+        second = self.collect()
+        self.assertEqual((second["snapshot"], second["head_sha"]), ("false", first["head_sha"]))
 
     def test_fails_fast_and_leaves_nothing(self):
         proc = self.run_script(COLLECT, "v9..")
@@ -94,11 +134,13 @@ class ScriptsTest(unittest.TestCase):
         self.assertIn("empty diff", proc.stderr)
         self.assertEqual(list(self.tmp.iterdir()), [])
 
-    def rank(self, verdicts, strictness="balanced"):
+    def review(self, strictness="balanced"):
         self.write("src/calc.py", "def add(a, b):\n    return a - b\n")
         self.commit("Subtract instead")
-        ctx = self.collect("--strictness", strictness)
-        work = Path(ctx["work_dir"])
+        return Path(self.collect("--strictness", strictness)["work_dir"])
+
+    def rank(self, verdicts, strictness="balanced", work=None):
+        work = work or self.review(strictness)
         (work / "verdicts-1.json").write_text(json.dumps(verdicts))
         out = self.repo / "review-findings.json"
         proc = self.run_script(RANK, str(work), "--engine", "general finder", "--out", str(out))
@@ -136,6 +178,25 @@ class ScriptsTest(unittest.TestCase):
         self.assertIn("id F1 is used more than once", proc.stdout)
         self.assertIn("comes after", proc.stdout)
         self.assertIn("src/gone.py does not exist", proc.stdout)
+
+    def test_post_skips_only_comments_already_posted(self):
+        bin_dir, posted = self.repo.parent / "bin", self.repo.parent / "posted.txt"
+        bin_dir.mkdir()
+        (bin_dir / "gh").write_text(FAKE_GH)
+        (bin_dir / "gh").chmod(0o755)
+        posted.write_text("")
+        env = {"PATH": f"{bin_dir}:{os.environ['PATH']}", "GH_POSTED": str(posted)}
+        work = self.review()
+        self.rank([self.verdict("Critical")], work=work)
+        self.assertEqual(self.run_script(POST, "7", **env).returncode, 0)
+        again = self.run_script(POST, "7", **env)
+        self.assertEqual((again.returncode, again.stdout.split(":")[0]), (3, "already posted"))
+        # A later run at the same head gives F1 to a different finding.
+        self.rank([self.verdict("Critical", problem="Another problem.")], work=work)
+        proc = self.run_script(POST, "7", **env)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("Another problem.", posted.read_text())
+        self.assertEqual(list(self.tmp.glob("code-review-post.*")), [])
 
 
 if __name__ == "__main__":

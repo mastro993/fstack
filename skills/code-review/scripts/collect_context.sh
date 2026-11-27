@@ -96,14 +96,16 @@ else
   if [ "$head_spec" = HEAD ] || { [ -n "$current" ] && [ "$head_spec" = "$current" ]; }; then at_head=1; fi
 fi
 base_tip=$(commit_of "$base_spec")
+# The review's own output, wherever it was written, is never part of the change.
+not_output=':(exclude,glob)**/review-findings.json'
 
 # Uncommitted work at the current HEAD becomes a snapshot commit (same work, same SHA), so the
 # review is pinned like any other. It never touches the index, the branch, or the files.
 snapshot=false
-if [ "$at_head" = 1 ] && [ -n "$(git status --porcelain -- . ':(exclude)review-findings.json')" ]; then
+if [ "$at_head" = 1 ] && [ -n "$(git status --porcelain -- . "$not_output")" ]; then
   cp "$(git rev-parse --git-path index)" "$work/index" 2>/dev/null || true
   export GIT_INDEX_FILE="$work/index"
-  git add -A -- . ':(exclude)review-findings.json'
+  git add -A -- . "$not_output"
   tree_obj=$(git write-tree)
   unset GIT_INDEX_FILE
   when=$(git log -1 --format=%cI HEAD)
@@ -122,7 +124,8 @@ git diff --no-color --no-ext-diff -M "$base_sha" "$head_sha" > "$work/diff.patch
 git log --reverse --format='%H %s' "$base_sha..$head_sha" > "$work/commits.txt"
 git diff --numstat -M "$base_sha" "$head_sha" > "$work/files.txt"
 
-# Changed lines in code, leaving out docs, lockfiles, generated and binary files; and the
+# Changed lines in code, leaving out docs (rules files count as code), lockfiles, generated and
+# binary files; whether any of that code is in a language where indentation is syntax; and the
 # destination path of every changed file, one per line.
 awk -F'\t' -v out="$work/paths.txt" -v code_out="$work/code-paths.tsv" '
   function dest(p) {
@@ -130,17 +133,21 @@ awk -F'\t' -v out="$work/paths.txt" -v code_out="$work/code-paths.tsv" '
     gsub(/\/\/+/, "/", p); return p
   }
   function noncode(p) {
+    if (p ~ /(^|\/)(CLAUDE|AGENTS|REVIEW)\.md$/) return 0
     return p ~ /(^|\/)(docs?|dist|build|vendor|node_modules)\// ||
       p ~ /\.(md|mdx|rst|adoc|lock|min\.js|map|svg|png|jpe?g|gif|ico|pdf|woff2?)$/ ||
       p ~ /(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|go\.sum|Cargo\.lock|poetry\.lock|uv\.lock|Gemfile\.lock|composer\.lock|LICENSE[^\/]*)$/ ||
       p ~ /(_pb2\.py|\.pb\.go|\.generated\.[a-z]+)$/
   }
-  { p = dest($3); print p > out; if ($1 != "-" && !noncode(p)) { code += $1 + $2; print $1 + $2 "\t" p > code_out } }
-  END { print code + 0 }' "$work/files.txt" > "$work/code_lines"
-code_lines=$(cat "$work/code_lines")
+  function indented(p) { return p ~ /(\.(py|pyi|pyx|ya?ml|mk|hs|elm|fs|fsx|nim|coffee|haml|pug|jade|slim|sass|styl)|(^|\/)(GNU)?[Mm]akefile)$/ }
+  { p = dest($3); print p > out
+    if ($1 != "-" && !noncode(p)) { code += $1 + $2; print $1 + $2 "\t" p > code_out; if (indented(p)) indent = 1 } }
+  END { print code + 0, indent + 0 }' "$work/files.txt" > "$work/code_lines"
+read -r code_lines indent < "$work/code_lines"
 files=$(wc -l < "$work/files.txt" | tr -d ' ')
 
-if [ "$code_lines" -eq 0 ] || git diff --quiet -w --ignore-blank-lines "$base_sha" "$head_sha"; then size=trivial
+# Whitespace-only changes are trivial, except where indentation is syntax.
+if [ "$code_lines" -eq 0 ] || { [ "$indent" = 0 ] && git diff --quiet -w --ignore-blank-lines "$base_sha" "$head_sha"; }; then size=trivial
 elif [ "$code_lines" -le 200 ]; then size=small
 else size=large; fi
 
@@ -298,7 +305,7 @@ fi
 # --- Where the code at head can be read and run -----------------------------------------------
 
 cleanup=""
-if [ "$snapshot" = true ] || { [ "$head_sha" = "$(git rev-parse HEAD)" ] && [ -z "$(git status --porcelain -- . ':(exclude)review-findings.json')" ]; }; then
+if [ "$snapshot" = true ] || { [ "$head_sha" = "$(git rev-parse HEAD)" ] && [ -z "$(git status --porcelain -- . "$not_output")" ]; }; then
   tree=$top
 else
   git worktree add -q --detach "$work/tree" "$head_sha" 2> "$work/git.err" || die 2 "cannot check out $head_sha: $(cat "$work/git.err")"

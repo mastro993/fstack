@@ -48,7 +48,7 @@ Stop with one line naming the reason when the script printed:
 - `draft=true`;
 - `bot_author=true`: a dependency or release bot opened it (an agent working for a person doesn't count);
 - `reviewed=true`: this head was already reviewed at this strictness;
-- `size=trivial`: no executable line changed (docs, whitespace, lockfiles, generated files).
+- `size=trivial`: no executable line or rules file changed: only docs, lockfiles, generated files, or whitespace where indentation isn't syntax.
 
 The user overrides the gate by asking to review it anyway, in this request or after your line. In an interactive session, ask once with the question tool; with no one to answer, stop.
 
