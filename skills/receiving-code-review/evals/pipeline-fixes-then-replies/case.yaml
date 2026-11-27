@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: pipeline-fixes-then-replies
+expected_outcome: |
+  Pipeline mode. Of three threads, assist-bot's returned-loan claim holds (accept), review-bot's
+  "addDays mutates now" doesn't (reject: db.js copies the date), and desk-lead's opt-out question is a
+  product decision (needs-human). The run writes the plan, replies on the review-bot thread with the
+  evidence and leaves it open, has the fix made by a fixer working from the plan (a test for a copy
+  returned early, isAlmostLate skips returned loans), pushed to due-soon-reminders without rewriting
+  history, then replies on assist-bot's thread naming the fix commit and resolves it. desk-lead's thread gets no
+  reply and stays open; her question goes to the user. Nothing is merged or approved.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,120 @@
+{
+ "repo": "library/readwell",
+ "number": 31,
+ "title": "Remind members two days before a loan is due",
+ "body": "Closes #30.\n\nThe nightly job now sends a \"Due soon\" email two days before a loan's due date, then the overdue reminders as before.",
+ "head": "due-soon-reminders",
+ "base": "main",
+ "author": "readwell-dev",
+ "viewer": "readwell-dev",
+ "bots": [
+  "review-bot",
+  "assist-bot"
+ ],
+ "issues": [
+  {
+   "number": 30,
+   "title": "Remind members before a loan is due",
+   "body": "Members keep forgetting due dates and end up overdue. Send them a reminder email two days before a loan is due, from the nightly job."
+  }
+ ],
+ "threads": [
+  {
+   "id": "PRRT_kwDOAx01",
+   "path": "src/loans.js",
+   "line": 45,
+   "comments": [
+    {
+     "id": "PRRC_kwDOAx01a",
+     "author": "assist-bot",
+     "at": "2026-11-24T17:02:00Z",
+     "body": "`isAlmostLate` doesn't check `loan.returnedAt`. A member who returns a copy early still gets the \"Due soon\" email two days before the old due date, because `sendReminders` calls `isAlmostLate` for every loan in `db.loans`. `isOverdue` guards against this with `!loan.returnedAt`; this check should too."
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDOAx02",
+   "path": "src/loans.js",
+   "line": 44,
+   "comments": [
+    {
+     "id": "PRRC_kwDOAx02a",
+     "author": "review-bot",
+     "at": "2026-11-24T17:05:00Z",
+     "body": "**Potential issue (major): `addDays` mutates `now`, shifting every later date check by two days.**\n\n`addDays(now, 2)` moves the caller's `now` forward. `sendReminders` passes the same `now` to `isOverdue` and to the `daysOver` math right after this call, so overdue reminders are computed two days in the future.\n\n```suggestion\n  const twoDaysOut = addDays(new Date(now.getTime()), 2);\n```"
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDOAx03",
+   "path": "src/reminders.js",
+   "line": 13,
+   "comments": [
+    {
+     "id": "PRRC_kwDOAx03a",
+     "author": "volunteer-dev",
+     "at": "2026-11-25T08:40:00Z",
+     "body": "Email is easy to miss for something time-sensitive like this. Could we send the due-soon reminder as an SMS instead? Most members gave us a phone number at the desk."
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDOAx04",
+   "path": "src/loans.js",
+   "line": 43,
+   "comments": [
+    {
+     "id": "PRRC_kwDOAx04a",
+     "author": "review-bot",
+     "at": "2026-11-24T17:05:00Z",
+     "body": "**Refactor suggestion (minor): make the reminder lead time configurable.**\n\nHard-coding two days ties policy to code. Read the lead time from configuration (for example a `REMINDER_LEAD_DAYS` environment variable, or a per-member preference) so the library can tune it without a deploy."
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDOAx05",
+   "path": "src/reminders.js",
+   "line": 12,
+   "comments": [
+    {
+     "id": "PRRC_kwDOAx05a",
+     "author": "desk-lead",
+     "at": "2026-11-25T09:15:00Z",
+     "body": "Should members be able to opt out of these? A few people complained about the overdue emails last month."
+    }
+   ]
+  }
+ ],
+ "reviews": [
+  {
+   "id": "PRR_kwDOAr01",
+   "author": "review-bot",
+   "state": "COMMENTED",
+   "at": "2026-11-24T17:05:00Z",
+   "body": "**2 inline comments posted.**\n\n<details>\n<summary>Comments on lines outside the diff (1)</summary>\n\n`src/loans.js` lines 7-36: **Prefer arrow functions for the exported helpers.** `checkOut`, `renew`, `giveBack` and `isOverdue` use function declarations; switch them to `export const checkOut = (...) => { ... }` for consistency with modern JavaScript style.\n\n</details>"
+  },
+  {
+   "id": "PRR_kwDOAr02",
+   "author": "assist-bot",
+   "state": "COMMENTED",
+   "at": "2026-11-24T17:02:00Z",
+   "body": "## Overview\n\nThis PR adds a due-soon email that the nightly job sends two days before a loan's due date. Reviewed 4 of 4 changed files and left 1 comment."
+  },
+  {
+   "id": "PRR_kwDOAr03",
+   "author": "desk-lead",
+   "state": "COMMENTED",
+   "at": "2026-11-25T09:15:00Z",
+   "body": ""
+  }
+ ],
+ "comments": [
+  {
+   "id": "IC_kwDOAc01",
+   "author": "review-bot",
+   "at": "2026-11-24T16:58:00Z",
+   "body": "## Summary of changes\n\nThe nightly job now emails members two days before a loan is due, using a new `isAlmostLate` helper in `src/loans.js`.\n\n| File | Change |\n|---|---|\n| `src/loans.js` | Adds `isAlmostLate`. |\n| `src/reminders.js` | Sends a \"Due soon\" email before the overdue checks. |\n| `test/loans.test.js` | Tests the due-soon email. |"
+  }
+ ],
+ "host": "git.example.com"
+}

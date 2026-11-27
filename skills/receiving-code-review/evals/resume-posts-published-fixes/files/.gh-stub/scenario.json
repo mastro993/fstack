@@ -1,0 +1,86 @@
+{
+ "repo": "library/readwell",
+ "number": 31,
+ "title": "Remind members two days before a loan is due",
+ "body": "Closes #30.\n\nThe nightly job now sends a \"Due soon\" email two days before a loan's due date, then the overdue reminders as before.",
+ "head": "due-soon-reminders",
+ "base": "main",
+ "author": "readwell-dev",
+ "viewer": "readwell-dev",
+ "bots": [
+  "review-bot",
+  "assist-bot"
+ ],
+ "issues": [
+  {
+   "number": 30,
+   "title": "Remind members before a loan is due",
+   "body": "Members keep forgetting due dates and end up overdue. Send them a reminder email two days before a loan is due, from the nightly job."
+  }
+ ],
+ "threads": [
+  {
+   "id": "PRRT_kwDODx01",
+   "path": "src/loans.js",
+   "line": 45,
+   "comments": [
+    {
+     "id": "PRRC_kwDODx01a",
+     "author": "assist-bot",
+     "at": "2026-11-24T17:02:00Z",
+     "body": "`isAlmostLate` doesn't check `loan.returnedAt`. A member who returns a copy early still gets the \"Due soon\" email two days before the old due date, because `sendReminders` calls `isAlmostLate` for every loan in `db.loans`. `isOverdue` guards against this with `!loan.returnedAt`; this check should too."
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDODx02",
+   "path": "src/reminders.js",
+   "line": 16,
+   "comments": [
+    {
+     "id": "PRRC_kwDODx02a",
+     "author": "volunteer-dev",
+     "at": "2026-11-25T08:40:00Z",
+     "body": "This says \"was due on\", but the loan isn't due yet. It reads like the overdue email."
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDODx03",
+   "path": "src/loans.js",
+   "line": 44,
+   "comments": [
+    {
+     "id": "PRRC_kwDODx03a",
+     "author": "review-bot",
+     "at": "2026-11-24T17:05:00Z",
+     "body": "**Potential issue (major): `addDays` mutates `now`, shifting every later date check by two days.**\n\n`addDays(now, 2)` moves the caller's `now` forward. `sendReminders` passes the same `now` to `isOverdue` and to the `daysOver` math right after this call, so overdue reminders are computed two days in the future.\n\n```suggestion\n  const twoDaysOut = addDays(new Date(now.getTime()), 2);\n```"
+    }
+   ]
+  },
+  {
+   "id": "PRRT_kwDODx04",
+   "path": "src/reminders.js",
+   "line": 12,
+   "comments": [
+    {
+     "id": "PRRC_kwDODx04a",
+     "author": "desk-lead",
+     "at": "2026-11-25T09:15:00Z",
+     "body": "Should members be able to opt out of these? A few people complained about the overdue emails last month."
+    }
+   ]
+  }
+ ],
+ "reviews": [
+  {
+   "id": "PRR_kwDOAr02",
+   "author": "assist-bot",
+   "state": "COMMENTED",
+   "at": "2026-11-24T17:02:00Z",
+   "body": "## Overview\n\nThis PR adds a due-soon email that the nightly job sends two days before a loan's due date. Reviewed 4 of 4 changed files and left 1 comment."
+  }
+ ],
+ "comments": [],
+ "host": "git.example.com"
+}

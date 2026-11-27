@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "target": "PR #31",
+  "base_sha": "__BASE_SHA__",
+  "head_sha": "__REVIEW_SHA__",
+  "strictness": "balanced",
+  "findings": [
+    {
+      "id": "F1",
+      "head_sha": "__REVIEW_SHA__",
+      "location": {
+        "path": "src/loans.js",
+        "start_line": 42,
+        "end_line": 45,
+        "url": "https://git.example.com/library/readwell/blob/__REVIEW_SHA__/src/loans.js#L42-L45"
+      },
+      "severity": "Important",
+      "pass": "bugs",
+      "problem": "`isAlmostLate` ignores `returnedAt`, so returned loans still get the due-soon email.",
+      "reasoning": "`isOverdue` checks `!loan.returnedAt` (src/loans.js:39) but `isAlmostLate` does not, and `sendReminders` calls it for every loan in `db.loans` (src/reminders.js:8-12). Trigger: a copy returned early whose due date is two days away.",
+      "impact": "Members who already brought a copy back get a \"Due soon\" email for it.",
+      "fix": "Return false for a returned loan, as `isOverdue` does."
+    },
+    {
+      "id": "F2",
+      "head_sha": "__REVIEW_SHA__",
+      "location": {
+        "path": "src/loans.js",
+        "start_line": 42,
+        "end_line": 43,
+        "url": "https://git.example.com/library/readwell/blob/__REVIEW_SHA__/src/loans.js#L42-L43"
+      },
+      "severity": "Minor",
+      "pass": "standards",
+      "problem": "`isAlmostLate` uses \"late\", a word GLOSSARY.md says to avoid for this concept.",
+      "reasoning": "GLOSSARY.md, Overdue: \"_Avoid_: late, expired\". The new function's name and comment call a loan near its due date \"almost late\".",
+      "impact": "The code drifts from the words the volunteers use; \"late\" reads as overdue.",
+      "fix": "Name it for the due date, for example `isDueSoon`."
+    },
+    {
+      "id": "F3",
+      "head_sha": "__REVIEW_SHA__",
+      "location": {
+        "path": "src/loans.js",
+        "start_line": 43,
+        "end_line": 44,
+        "url": "https://git.example.com/library/readwell/blob/__REVIEW_SHA__/src/loans.js#L43-L44"
+      },
+      "severity": "Important",
+      "pass": "bugs",
+      "problem": "`isAlmostLate` is also true for overdue loans, so they get the due-soon email instead of the overdue reminder.",
+      "reasoning": "`loan.dueDate - now <= 2 * 86_400_000` holds for any negative difference, and `sendReminders` `continue`s after the due-soon email, skipping the overdue branch. The existing test \"the first reminder goes out when the loan is already overdue\" fails at this commit.",
+      "impact": "Overdue members are told their loan is due soon and never get the overdue reminder.",
+      "fix": "Match only the day two days before the due date."
+    }
+  ]
+}

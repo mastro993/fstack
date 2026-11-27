@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "repo": "library/readwell",
+  "pr": 31,
+  "head_sha": "__HEAD_SHA__",
+  "checked_at": "2026-11-26T10:00:00Z",
+  "items": [
+    {
+      "id": "PRRT_kwDODx01",
+      "sources": [
+        {
+          "type": "thread",
+          "id": "PRRT_kwDODx01",
+          "author": "assist-bot"
+        }
+      ],
+      "location": "src/loans.js:43-46",
+      "claim": "Returned loans still get the due-soon email because isAlmostLate ignores returnedAt.",
+      "verdict": "accept",
+      "severity": "Important",
+      "order": 1,
+      "evidence": "src/loans.js:43-46 never reads loan.returnedAt and src/reminders.js:12 calls it for every loan; a probe with a copy returned on day 3 produced a 'Due soon' email on day 19.",
+      "fix_brief": "isAlmostLate returns false for a loan whose returnedAt is set. Check: a test where a copy returned early gets no due-soon email two days before its due date.",
+      "reply_draft": "Fixed in {sha}: `isAlmostLate` now returns false for returned loans, and a test covers a copy returned early."
+    },
+    {
+      "id": "PRRT_kwDODx02",
+      "sources": [
+        {
+          "type": "thread",
+          "id": "PRRT_kwDODx02",
+          "author": "volunteer-dev"
+        }
+      ],
+      "location": "src/reminders.js:16",
+      "claim": "The due-soon email says \"was due on\" for a loan that isn't due yet.",
+      "verdict": "accept",
+      "severity": "Minor",
+      "order": 2,
+      "evidence": "src/reminders.js:16 builds the due-soon body with \"was due on\", copied from the overdue email at line 26.",
+      "fix_brief": "The due-soon email body says the loan \"is due on\" its date. Check: the due-soon test asserts the body wording.",
+      "reply_draft": "Fixed in {sha}: the due-soon email now says \"is due on\"; the due-soon test checks the wording."
+    },
+    {
+      "id": "PRRT_kwDODx03",
+      "sources": [
+        {
+          "type": "thread",
+          "id": "PRRT_kwDODx03",
+          "author": "review-bot"
+        }
+      ],
+      "location": "src/loans.js:44",
+      "claim": "addDays(now, 2) mutates now and shifts the overdue checks.",
+      "verdict": "reject",
+      "severity": "Important",
+      "evidence": "src/db.js:12 copies its input (`new Date(date)`); a probe printed the same `now` before and after `addDays(now, 2)`.",
+      "reply_draft": "`addDays` copies its input (`src/db.js:12`, `new Date(date)`), so `now` doesn't move; a probe printed the same timestamp before and after the call."
+    },
+    {
+      "id": "PRRT_kwDODx04",
+      "sources": [
+        {
+          "type": "thread",
+          "id": "PRRT_kwDODx04",
+          "author": "desk-lead"
+        }
+      ],
+      "location": "src/reminders.js:12",
+      "claim": "Members should maybe be able to opt out of reminder emails.",
+      "verdict": "needs-human",
+      "severity": "Minor",
+      "evidence": "Members have no preference field (src/db.js:3); issue #30 asks only for the due-soon email. Whether to offer an opt-out is a product call.",
+      "decision_context": {
+        "question": "Should members be able to opt out of reminder emails, and in this PR?",
+        "options": [
+          {
+            "choice": "Ship #31 without an opt-out and open an issue for it",
+            "cost": "the members who complained keep getting reminders until then"
+          },
+          {
+            "choice": "Add an opt-out to this PR",
+            "cost": "a new member field plus desk and website changes, well beyond issue #30"
+          }
+        ],
+        "recommendation": "Ship without it and open an issue."
+      }
+    }
+  ]
+}

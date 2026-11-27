@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: resume-posts-published-fixes
+expected_outcome: |
+  Resume mode. An earlier report run's resolution-plan.json holds two accepted items, one reject,
+  and one needs-human. Only the first accepted item's fix is on the PR (commit "Skip returned loans in
+  the due-soon check"). The run finds that commit, replies on assist-bot's thread naming it and resolves
+  it; volunteer-dev's wording fix isn't published, so his thread gets no reply yet and the run says so;
+  review-bot's thread gets the saved reject reply and stays open; desk-lead's needs-human thread is left
+  alone. It doesn't re-judge the verdicts, edit code, or push.
+context:
+  scaffold_script: place-files.sh
