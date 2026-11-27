@@ -24,23 +24,24 @@ Done when every issue has all three.
 
 ## 2. Plan
 
-Pick the mode:
+Pick the mode yourself: the first one below that the harness supports. The plan names it; the go covers it.
 
-- **Threads**: the harness can start top-level threads the user can open and talk to. One thread per issue, so a batch may hold several issues.
-- **Subagents**: otherwise. One subagent per issue, one at a time, so each batch is one issue.
-- **Inline**: no subagents either. Run implement-issue yourself, one issue per batch.
+1. **Threads**: the harness can start top-level threads the user can open and talk to. One thread per issue, so a batch may hold several issues.
+2. **Subagents**: otherwise. One subagent per issue, one at a time, so each batch is one issue.
+3. **Inline**: no subagents either. Run implement-issue yourself, one issue per batch.
 
 Order the batches: an issue goes after every batch holding one of its blockers, since runners build on merged code. In threads mode, issues share a batch only when neither blocks the other and their footprints are disjoint; overlapping PRs conflict at merge, so when unsure, split. In-flight issues go first; otherwise keep the tracker's order.
 
-Show the plan:
+Show the plan as markdown the harness renders, shaped like this example:
 
-```
-Plan for <goal> (<mode>)
-Batch 1: #12 <title>, #15 <title> — <why they can run together>
-Batch 2: #19 <title> — after #12
+**Plan for #8 Loan reminders** (threads)
+
+- **Batch 1**: #12 Due-date email, #15 Reminder settings page — separate modules, neither blocks the other
+- **Batch 2**: #19 Weekly digest — after #12
+
 Done: #10 · Waiting outside the goal: #21 (blocked by #30)
+
 Each batch starts once every PR of the one before is merged and you say go.
-```
 
 Done when the user gives the **go**: their answer to the plan, or an explicit "just start" in the request. Naming the issues alone is not a go. With no one to answer, stop at the plan.
 
@@ -61,13 +62,14 @@ Done when every runner has ended with its STATUS.
 
 ## 4. Gate
 
-Report, then end your turn:
+Report in the plan's markdown, then end your turn:
 
-```
-Batch <k> of <n> for <goal>
-- #12 — <STATUS> — <PR link, or the questions or blocker>
-Next: batch <k+1> (<issues>) once <PR links> are merged and you say go.
-```
+**Batch 1 of 2 for #8 Loan reminders**
+
+- #12 Due-date email — `DONE` — [PR #51](https://github.com/acme/library/pull/51)
+- #15 Reminder settings page — `NEEDS_CONTEXT` — should snoozing be per loan or per member?
+
+Next: batch 2 (#19) once #15 is answered, its PR and PR #51 are merged, and you say go.
 
 The gate opens when every issue of the batch has its PR merged, checked on the code host, and the user says go. Until then, name what's missing and wait.
 

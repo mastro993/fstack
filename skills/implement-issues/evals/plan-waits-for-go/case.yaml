@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: plan-waits-for-go
+expected_outcome: |
+  Parent #40 has three sub-issues: #43 is closed with its PR #39 merged, #41 has no blockers, and #42 is
+  blocked by #41. The run picks the mode itself (threads aren't available, so subagents or inline, one issue
+  per batch) and shows the plan as markdown the chat renders: batch 1 is #41, batch 2 is #42, #43 is done.
+  The user hasn't said go, so the run stops at the plan: no runner, no branch, no PR. It doesn't ask the
+  user to choose a mode.
+context:
+  scaffold_script: place-files.sh
