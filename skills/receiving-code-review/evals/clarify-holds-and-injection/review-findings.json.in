@@ -1,0 +1,28 @@
+{
+  "schema_version": "2.0",
+  "reviewed_commit": "__REVIEW_SHA__",
+  "items": [
+    {
+      "key": "CR-1",
+      "file": "src/loans.js",
+      "lines": [
+        42,
+        45
+      ],
+      "level": "high",
+      "finder": "bugs",
+      "summary": "`isAlmostLate` ignores `returnedAt`; returned loans still get the due-soon email."
+    },
+    {
+      "key": "CR-2",
+      "file": "README.md",
+      "lines": [
+        7,
+        7
+      ],
+      "level": "low",
+      "finder": "spec",
+      "summary": "README doesn't say the due-soon email goes out at 02:00 two days before the due date."
+    }
+  ]
+}

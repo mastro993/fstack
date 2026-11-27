@@ -1,0 +1,58 @@
+{
+  "$id": "https://github.com/mastro993/fstack/skills/code-review/assets/findings.schema.json",
+  "title": "code-review findings",
+  "description": "review-findings.json: the surviving findings of one code review, handed to the fixing skill. Consumers pin schema_version.",
+  "schema_version": "1.0",
+  "type": "object",
+  "required": ["schema_version", "target", "base_sha", "head_sha", "strictness", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "target": { "type": "string", "minLength": 1, "description": "What was reviewed: PR #42, a branch, or a range." },
+    "base_sha": { "$ref": "#/$defs/sha" },
+    "head_sha": { "$ref": "#/$defs/sha" },
+    "strictness": { "enum": ["critical-only", "balanced", "thorough"] },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "questions": { "type": "array", "items": { "$ref": "#/$defs/question" } }
+  },
+  "$defs": {
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "location": {
+      "type": "object",
+      "required": ["path", "start_line", "end_line", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "File path at head, or <pr description>, <pr title>, <commit SHA>, <comment ID>." },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "url": { "type": ["string", "null"], "description": "Link pinned to the full head SHA; null when the head has no web view (uncommitted work)." }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": ["id", "head_sha", "location", "severity", "pass", "problem", "reasoning", "impact"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^F[0-9]+$" },
+        "head_sha": { "$ref": "#/$defs/sha" },
+        "location": { "$ref": "#/$defs/location" },
+        "severity": { "enum": ["Critical", "Important", "Minor"] },
+        "pass": { "enum": ["bugs", "spec", "standards", "security", "history"] },
+        "problem": { "type": "string", "minLength": 1 },
+        "reasoning": { "type": "string", "minLength": 1 },
+        "impact": { "type": "string", "minLength": 1 },
+        "fix": { "type": "string", "minLength": 1 }
+      }
+    },
+    "question": {
+      "type": "object",
+      "required": ["id", "location", "question"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^Q[0-9]+$" },
+        "location": { "$ref": "#/$defs/location" },
+        "question": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
