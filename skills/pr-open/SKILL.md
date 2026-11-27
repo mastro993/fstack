@@ -34,15 +34,15 @@ A title format the repo enforces (a lint, a documented rule) wins over this one,
 
 Fill the repo's template when it has one: keep its headings, order, and checkboxes, follow and then delete its HTML-comment guidance, and write `n/a` under a heading the change has nothing for. Put each piece below under the heading it fits; a piece with no fitting heading gets a short section of its own after the template's. Without a template, use the default below with the sections the change has content for.
 
-**Words are the last resort.** A reviewer takes in a picture faster than a paragraph, so reach first for:
+**Show the Why and What.** Pick the smallest view that makes the point and set it beside the one or two sentences it supports; one or two views tell most stories.
 
-- **A mermaid diagram** when the change touches how parts relate: a new or changed flow (`flowchart`), calls between services or components (`sequenceDiagram`), a state machine (`stateDiagram-v2`), a data model (`erDiagram`), or the blast radius as a graph. Keep it to the nodes the change touches, and draw one when it replaces a paragraph.
-- **A `diff` block** when the point is a before and after of something small: a signature, a config value, a rule, a CLI output, a call tree, a file tree. Lift the few lines that carry the change, or sketch them as pseudocode; the Files tab holds the rest.
-- **A table** when items share attributes: before/after previews, endpoints and their status codes, options and defaults.
+- **A mermaid diagram** when the change touches how parts relate: a flow (`flowchart`), calls between services or components (`sequenceDiagram`), a state machine (`stateDiagram-v2`), a data model (`erDiagram`). Keep it to the nodes the change touches.
+- **A `diff` block** when the point is a before and after of a shape that already exists: the few code lines that carry the change, or a sketch of a call tree, component tree, file tree, or rule in pseudocode with `+` and `-` lines. The Files tab holds the rest.
+- **A table** when items share attributes: endpoints and their status codes, options and defaults.
 
-The prose that's left is short, plain sentences in the project's own terms, written for a reviewer who hasn't seen the conversation. Group changes by behavior. Every claim about behavior comes from the diff, a test, or a command you ran.
+The prose around them is short, plain sentences in the project's own terms, written for a reviewer who hasn't seen the conversation. Every claim about behavior comes from the diff, a test, or a command you ran.
 
-**Blast radius** goes in the What section: what else the change can affect. Find it by searching callers and consumers of what changed (`git grep` every changed function, type, route, env var, schema field, and config key, until each one's users are accounted for), and list them: callers that get the new behavior, public APIs, data migrations, config defaults, feature flags, and anything shipped to other teams or clients. Then name what stays as it was where a reader would worry, and whether it's a two-way door (a revert undoes it) or a one-way one (a migration, deleted data, a published API).
+**Blast radius** closes the What section as one short prose paragraph, about three sentences: its size in a word (contained, moderate, wide), what else now behaves differently, what stays as it was where a reader would worry, and whether it's a two-way door (a revert undoes it) or a one-way one (a migration, deleted data, a published API). Find it by searching for the users of what changed: `git grep` every changed function, type, route, env var, schema field, and config key until each one's callers, consumers, and clients are accounted for.
 
 **Bugs** get a repro under How to test: the exact steps and inputs that show the bug on the base branch, what happens there, and what happens on this branch. The tester runs it on both and sees the difference.
 
@@ -69,17 +69,7 @@ Expired coupons still apply their discount at checkout, so lapsed promo codes ke
   return accept(coupon.discount);
 ```
 
-**Blast radius**
-
-```mermaid
-flowchart LR
-  checkout["Checkout form"] --> validate["validateCoupon()"]
-  admin["Admin API: POST /orders"] --> validate
-  validate --> total["Order total"]
-```
-
-- Checkout and admin-created orders now refuse expired coupons; orders already placed keep their discount.
-- Two-way door: a revert restores the old check.
+**Blast radius: moderate.** Checkout and admin-created orders both go through `validateCoupon()`, so both now refuse expired coupons; orders already placed keep their discount. Two-way door: a revert restores the old check.
 
 ## How to test
 
