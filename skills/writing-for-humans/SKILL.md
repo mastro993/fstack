@@ -13,7 +13,7 @@ Wordy habits are symptoms. Text with no clear point, no specific claim, or no so
 
 - **Know the reader**: who reads it, what they already know, what they do next. Define a term they may not know the first time it appears ("Arabidopsis, a flowering mustard plant") and spell out each abbreviation once. Keep the terms they share: engineers reading about p99 latency need no definition of p99.
 - **Lead with the answer.** The first one or two sentences carry the bottom line ("The refund arrives in 3 working days."); the rest follows in order of importance.
-- **Make every claim specific and true.** Name the source ("the 2025 support survey found…") or drop the claim. Every name, date, number, and citation in the final text is real. When a fact is missing, ask the user, or mark the gap plainly in the draft and say so in your reply: a vague true sentence beats a specific invented one.
+- **Make every claim specific and true.** Name the source ("the 2025 support survey found…") or drop the claim. Every name, date, number, and citation in the final text is real. When a fact is missing, ask the user. When nobody can answer, write the text so it can go out as is, leaving out or writing around the missing fact, and name the gap in your reply: a vague true sentence beats a specific invented one or a placeholder.
 - **Give every sentence new information.** Open with the point and stop when the information ends. Preamble ("Let's break this down"), narration of your own process, closers that restate the answer, lines that only sound wise, "In conclusion", and chat openers and sign-offs ("Great question!", "I hope this helps", "Let me know if…") all go.
 
 ## Draft: write plainly
@@ -29,6 +29,8 @@ Wordy habits are symptoms. Text with no clear point, no specific claim, or no so
 - Keep a voice. Greetings, transitions, a formal tone, and correct grammar are normal human writing; keep them where the genre expects them, since clean but voiceless prose reads as machine-made too. When the user shares a sample of their writing, match its habits.
 
 ## Draft: format for where it lands
+
+A format the repo, a template, or the calling skill sets for this text wins; these rules fill in the rest.
 
 - Headings in sentence case. Bold only the rare phrase the reader must not miss, and keep bullets plain. Leave emoji out unless the user's own writing uses them.
 - Prose for a line of reasoning, lists for items the reader scans, and a table when several items share several attributes. Two facts make a sentence.
