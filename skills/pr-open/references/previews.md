@@ -1,34 +1,30 @@
 # Previews
 
-Before and after captures for a change a user sees. A reviewer judges a visual change from the picture, so capture them yourself before opening the PR.
-
 ## What to capture
 
-List the screens and states the diff changes: each page, route, component, email, or command it touches, plus the states the change reaches (empty, error, loading, a narrow viewport when layout moved). One row per changed state; three or four rows tell most stories.
+One row per screen and state the diff changes: each page, route, component, email, or command, plus the states it reaches (empty, error, loading, a narrow viewport when layout moved). Three or four rows tell most stories.
 
-- **Interaction or motion** (a flow, an animation, a drag): a short video, when the capture tool records one.
-- **Terminal output** (a CLI, a generated file): a `diff` block, before lines `-`, after lines `+`.
-- **A new screen** has no before, and a removed one no after: write `—` in that cell.
+- **Interaction or motion**: a short video, when the tool records one.
+- **Terminal output**: a `diff` block, before `-`, after `+`.
+- **New or removed screen**: `—` in the missing cell.
 
-## Capture before and after from the same setup
+## Capture
 
-1. **Run the base beside the branch.** `git worktree add <scratch>/base origin/<base>` gives the base version and keeps the user's checkout as it is. Install its dependencies the way the project does (its lockfile and package manager).
-2. **Start both** with the project's own run command (README, package scripts, Makefile), on different ports.
-3. **Same conditions on both sides**: the same seed or fixture data, viewport, theme, locale, and logged-in role, so every difference in the pair is the PR's.
-4. **Capture** with the first tool that works: the harness's browser or preview tool; an installed headless browser CLI (`playwright-cli`, `browser-use`, `agent-browser`); or headless Chrome, `"<chrome binary>" --headless=new --window-size=1280,800 --screenshot=<file> <url>`. A mobile app goes through the harness's simulator or device tools. Ask before installing a tool.
-5. **Clean up**: stop the servers you started, then `git worktree remove <scratch>/base`.
+1. **Base beside branch**: `git worktree add <scratch>/base origin/<base>`, with dependencies installed the project's way.
+2. **Start both** with the project's run command, on different ports.
+3. **Same conditions** on both sides (seed data, viewport, theme, locale, role), so every difference is the PR's.
+4. **Tool**, first that works: the harness's browser or preview tool; `playwright-cli`, `browser-use`, `agent-browser`; headless Chrome, `"<chrome>" --headless=new --window-size=1280,800 --screenshot=<file> <url>` (it won't go narrower than about 500 px; use a browser CLI for phone widths). Mobile apps: the harness's simulator or device tools. Ask before installing a tool.
+5. **Clean up**: stop the servers, `git worktree remove <scratch>/base`.
 
-Name the files `before-<state>.png` and `after-<state>.png` and save them beside the body file, so `--attach` matches them to the body's references.
+Name files `before-<state>.png` and `after-<state>.png`, beside the body file.
 
-Done when every state on your list has a before and an after taken under the same conditions.
+## Check before attaching
 
-## Check every capture before it leaves the machine
+Attaching publishes. Open each capture and confirm it shows fixture data only: no secrets or tokens, real names, emails, customer data, internal hostnames, or other apps' notifications. Recapture or crop; hold back what you can't make safe and say so in the reply.
 
-Open each file and look. Attaching it publishes it, so it shows fixture data only: check for secrets or tokens, real names, emails, or customer data, internal hostnames and URLs, and other apps' notifications. Recapture with fixture data or crop it. Attach only captures you've made safe, and say in the reply which one you held back and why.
+## Blocked
 
-## When capture is blocked
-
-The app needs credentials or services you lack, the build fails, or every capture tool fails: tell the user what blocked it, and ask whether they'll send the media or want the PR opened without previews. When they choose to open it, the Previews section says what's missing and why.
+Missing credentials or services, a failing build, or no working tool: tell the user what blocked it and ask whether they'll send media or want the PR without previews. Without them, the Previews section says what's missing and why.
 
 ## Layout
 
@@ -37,4 +33,4 @@ The app needs credentials or services you lack, the build fails, or every captur
 | Expired coupon | ![Checkout with an expired coupon, before](./before-expired.png) | ![Checkout with an expired coupon, after](./after-expired.png) |
 | Mobile, 375 px | ![Checkout on mobile, before](./before-mobile.png) | ![Checkout on mobile, after](./after-mobile.png) |
 
-Drop the State column when there's one row. Alt text says what the image shows, for readers who can't see it. Videos go below the table, each on its own line under a bold **Before** or **After** label, since GitHub plays a video only on a line of its own.
+Drop the State column for one row. Alt text describes the image. Videos go below the table, each on its own line under **Before** or **After**, since GitHub plays a video only on a line of its own.
