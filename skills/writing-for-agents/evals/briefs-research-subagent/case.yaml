@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: briefs-research-subagent
+expected_outcome: |
+  The run writes a brief and does not do the search itself. The brief states the goal and why
+  (find every caller of /v1/payments so the endpoint can be switched off), names both sources
+  (services/ code and logs/gateway/ access logs), says what to return in a set format (each
+  calling service with the evidence: file and line, or log lines and counts), keeps the subagent
+  read-only, and says when it is done. It is written in a calm voice without capitals for emphasis.

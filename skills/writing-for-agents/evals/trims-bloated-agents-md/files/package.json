@@ -1,0 +1,12 @@
+{
+  "name": "tallybook",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "vite",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:reset": "tsx scripts/db-reset.ts"
+  }
+}

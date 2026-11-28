@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: drafts-release-skill
+expected_outcome: |
+  The run writes skills/release/SKILL.md. Its frontmatter description says when to use the skill
+  with the phrases users type (cut a release, ship a version, publish the new version) and leaves
+  the steps to the body. The body gives the exact commands, stops and reports when pnpm test or
+  pnpm build fails, and asks the user to confirm before the irreversible steps (pushing the tag and
+  running pnpm publish), saying why. It is short, written in a calm voice without capitals for
+  emphasis, and carries no generic advice.
