@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: report-json-flag
+expected_outcome: |
+  `tally report --json <file>` prints the summary as JSON (projects with their hours, and the total) that
+  parses with a JSON parser, and the text output stays byte-for-byte the same. The choice between text and
+  JSON is made once, where the CLI parses its arguments, and passed down as a value (a render function or
+  formatter), not threaded as a flag through ReportService to be checked again below. The run adds nothing
+  beyond the request: no --format with other choices, no config or env setting, no registry or plugin
+  machinery. ReportService, a one-caller layer that only forwards, and the single-implementation Formatter
+  base class are collapsed or the run says why they stay. A test runs the CLI with --json and checks the parsed
+  output against literal values. The README documents --json. The unittest suite passes.
+context:
+  scaffold_script: place-files.sh

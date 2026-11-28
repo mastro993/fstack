@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: discount-code-expiry
+expected_outcome: |
+  The catalog gains an expiry per code (SPRING25's last valid day is 2026-05-31, the others none), an
+  expired code raises its own error type (such as ExpiredCode) that checkout turns into an "expired" message
+  distinct from "That code doesn't exist", and the current date reaches the expiry check as a value (a
+  parameter or an injected clock) read once at the entry point, not by patching datetime in tests. The new
+  tests drive apply_code or checkout with concrete dates and literal expected totals, cover both sides of the
+  boundary (31 May still discounts, 1 June is refused), and assert the error type or checkout's result rather
+  than message text. The old tests pinned to internals (patching _lookup and asserting the call, patching
+  _CODES with the old shape, comparing the exception message) are rewritten through the public interface
+  rather than re-pointed at new internals. The unittest suite passes.
+context:
+  scaffold_script: place-files.sh
