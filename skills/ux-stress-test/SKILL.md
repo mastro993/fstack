@@ -1,6 +1,7 @@
 ---
 name: ux-stress-test
 description: Use when the user wants to stress-test UX flows, simulate first-time users, run usability or persona testing, or do pre-launch QA of a web app.
+disable-model-invocation: true
 compatibility: Needs the create-issues skill from the same plugin, subagents, Chrome, browser-use (uv tool install browser-use) or playwright-cli as a fallback, and the app's source code to fix.
 ---
 
