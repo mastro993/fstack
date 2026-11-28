@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: maintenance-notice-for-clinic-staff
+expected_outcome: |
+  notice.md tells front desk staff, in their own terms, that from Saturday 5 December 22:00 to Sunday 6 December
+  02:00 they can see bookings but cannot create, move or cancel them, and that they use the paper booking form
+  in the front desk drawer and enter those bookings afterwards. It covers the possible extension to 04:00 with
+  updates on the intranet banner and the Sunday SMS reminders held until 08:00. The database upgrade, RPO,
+  snapshot, read-only mode and sync details stay out or are said in plain words. The weekend contact number is
+  missing from the notes, so the run leaves no placeholder and invents no number: it leaves the line out or
+  marks the gap, and tells the user.
+context:
+  scaffold_script: place-files.sh

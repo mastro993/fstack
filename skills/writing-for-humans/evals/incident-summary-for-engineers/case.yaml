@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: incident-summary-for-engineers
+expected_outcome: |
+  summary.md opens with the impact and the status: checkout-api p99 latency and 5xx errors (peak 18%) for about
+  40 minutes on 20 November, resolved by rolling back. It gives the cause in the engineers' own terms (the
+  WEB_CONCURRENCY change pushed 960 client connections against pgbouncer's max_client_conn of 600, saturating
+  the pool) without defining p99, pgbouncer or connection pools. It says the failed-checkout count is pending
+  from analytics instead of estimating it, lists the three follow-ups with Ines as owner of the
+  max_client_conn decision, and ends without a lessons-learned or optimistic closing line.
+context:
+  scaffold_script: place-files.sh
