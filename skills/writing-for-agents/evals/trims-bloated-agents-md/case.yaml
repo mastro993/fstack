@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: trims-bloated-agents-md
+expected_outcome: |
+  The run rewrites AGENTS.md in place. It drops the project description and the directory tour
+  (agents can discover both) and the generic advice (clean code, best practices, handle errors,
+  readable code, always write tests). It names one package manager, pnpm, which matches
+  package.json's packageManager, and the npm line is gone. It keeps every fact an agent couldn't
+  guess: TZ=UTC for the date tests, pnpm db:reset only against the local database on
+  localhost:5433, the migration command and the rule against editing merged migrations, named
+  exports, and leaving legacy/ alone with its reason (customers run v1 on their own servers). The
+  Jest-to-Vitest timeline becomes a plain "use Vitest" rule. Capitals for emphasis are gone. The
+  final reply says what was cut and why.
+context:
+  scaffold_script: place-files.sh

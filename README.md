@@ -33,6 +33,7 @@ fstack turns everyday engineering workflows into skills your coding agent runs e
 | UX | [ux-brainstorm](skills/ux-brainstorm/SKILL.md) · [ux-stress-test](skills/ux-stress-test/SKILL.md) · [design-system](skills/design-system/SKILL.md) |
 | Building | [implement](skills/implement/SKILL.md) · [implement-issue](skills/implement-issue/SKILL.md) · [test-driven-development](skills/test-driven-development/SKILL.md) |
 | Code quality | [code-review](skills/code-review/SKILL.md) · [receiving-code-review](skills/receiving-code-review/SKILL.md) · [comment-sweep](skills/comment-sweep/SKILL.md) |
+| Agent instructions | [writing-for-agents](skills/writing-for-agents/SKILL.md) |
 | Pull requests | [pr-open](skills/pr-open/SKILL.md) · [pr-ship](skills/pr-ship/SKILL.md) · [pr-babysit](skills/pr-babysit/SKILL.md) · [resolve-merge-conflicts](skills/resolve-merge-conflicts/SKILL.md) |
 | Writing | [writing-for-humans](skills/writing-for-humans/SKILL.md) |
 
