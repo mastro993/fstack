@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: expense-announcement-cleanup
+expected_outcome: |
+  announcement.md is rewritten as a short plain-text email. Its opening sentences say that expenses move to
+  Spendwise (spend.fennel.example) on 1 December, and it keeps every real fact: receipts by photo in the app,
+  reimbursement in 5 working days instead of 3 weeks, the old form retired after 15 December. The unsourced
+  "experts agree ... 40%" claim is gone or flagged to the user, never given an invented source. The text drops
+  the emoji, markdown headings and bold, the "not just a tool, a mindset" lines, the sales words, the
+  "In conclusion" section and the closing pleasantries, and adds no facts of its own.
+context:
+  scaffold_script: place-files.sh

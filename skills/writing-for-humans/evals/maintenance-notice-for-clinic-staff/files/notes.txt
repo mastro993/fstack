@@ -1,0 +1,11 @@
+maint window - booking platform
+- PG major upgrade 14 -> 16 on prod cluster
+- window Sat 5 Dec 22:00 - Sun 6 Dec 02:00 CET
+- booking svc in RO mode for the whole window: existing appts visible, no create/move/cancel
+- PMS sync paused, catches up automatically after window (no manual action)
+- RPO 0, snapshot taken 21:45, rollback via snapshot if smoke tests fail
+- if rollback happens window may extend to 04:00, we post status on the intranet banner
+- staff fallback: paper booking form (pad in front desk drawer), enter them in the system Sunday after 02:00 or Monday morning
+- SMS reminders for Sunday appts held until Sun 08:00 then sent
+- on-call: Dario (infra). weekend contact number TBD, ask Marta
+- 6 clinics affected, all of them
